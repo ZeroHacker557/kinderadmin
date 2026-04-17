@@ -13,6 +13,8 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import type {
   AttendanceRecord,
   Child,
@@ -21,6 +23,20 @@ import type {
   FinanceTransaction,
   GroupInfo,
 } from '@/types';
+
+function currentOwnerId(): string | null {
+  try {
+    return getAuth(app).currentUser?.uid ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function withOwner<T extends Record<string, unknown>>(payload: T): T & { ownerId: string } {
+  const ownerId = currentOwnerId();
+  if (!ownerId) throw new Error('Not authenticated');
+  return { ...payload, ownerId };
+}
 
 function withId<T>(id: string, payload: Record<string, unknown>) {
   return { id, ...(payload as T) };
@@ -31,8 +47,14 @@ function subscribeCollection<T>(
   onData: (rows: T[]) => void,
   constraints: any[] = [],
 ) {
+  const ownerId = currentOwnerId();
+  if (!ownerId) {
+    onData([]);
+    return () => {};
+  }
   const ref = collection(db, collectionName);
-  const q = constraints.length ? query(ref, ...constraints) : query(ref);
+  const scoped = [where('ownerId', '==', ownerId), ...constraints];
+  const q = scoped.length ? query(ref, ...scoped) : query(ref);
   return onSnapshot(q, (snap: any) => {
     const rows = snap.docs.map((d: any) => withId<T>(d.id, d.data()));
     onData(rows);
@@ -69,7 +91,7 @@ export function subscribeChildren(onData: (children: Child[]) => void) {
 }
 
 export function createChild(payload: Omit<Child, 'id'>) {
-  return addDoc(collection(db, 'children'), stripUndefinedDeep(payload));
+  return addDoc(collection(db, 'children'), stripUndefinedDeep(withOwner(payload as any)));
 }
 
 export function updateChild(payload: Child) {
@@ -91,7 +113,7 @@ export function subscribeEmployees(onData: (employees: Employee[]) => void) {
 }
 
 export function createEmployee(payload: Omit<Employee, 'id'>) {
-  return addDoc(collection(db, 'employees'), stripUndefinedDeep(payload));
+  return addDoc(collection(db, 'employees'), stripUndefinedDeep(withOwner(payload as any)));
 }
 
 export function updateEmployee(payload: Employee) {
@@ -113,7 +135,7 @@ export function subscribeGroups(onData: (groups: GroupInfo[]) => void) {
 }
 
 export function createGroup(payload: Omit<GroupInfo, 'id'>) {
-  return addDoc(collection(db, 'groups'), stripUndefinedDeep(payload));
+  return addDoc(collection(db, 'groups'), stripUndefinedDeep(withOwner(payload as any)));
 }
 
 export function updateGroup(payload: GroupInfo) {
@@ -135,7 +157,7 @@ export function subscribeDepartments(onData: (departments: Department[]) => void
 }
 
 export function createDepartment(payload: Omit<Department, 'id'>) {
-  return addDoc(collection(db, 'departments'), stripUndefinedDeep(payload));
+  return addDoc(collection(db, 'departments'), stripUndefinedDeep(withOwner(payload as any)));
 }
 
 export function deleteDepartment(id: string) {
@@ -152,7 +174,7 @@ export function subscribeTransactions(onData: (tx: FinanceTransaction[]) => void
 }
 
 export function createTransaction(payload: Omit<FinanceTransaction, 'id'>) {
-  return addDoc(collection(db, 'transactions'), stripUndefinedDeep(payload));
+  return addDoc(collection(db, 'transactions'), stripUndefinedDeep(withOwner(payload as any)));
 }
 
 export function updateTransaction(payload: FinanceTransaction) {
@@ -217,10 +239,15 @@ export function subscribeAttendanceDay(
   date: string,
   onData: (meta: AttendanceDayMeta | null) => void,
 ) {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return () => {};
   const ref = doc(db, 'attendanceDays', attendanceDayId(groupId, date));
   return onSnapshot(ref, (snap: any) => {
     if (!snap.exists()) return onData(null);
-    onData(withId<AttendanceDayMeta>(snap.id, snap.data()));
+    const data = withId<AttendanceDayMeta>(snap.id, snap.data());
+    // best-effort client-side guard
+    if ((data as any).ownerId && (data as any).ownerId !== ownerId) return onData(null);
+    onData(data);
   });
 }
 
@@ -231,6 +258,8 @@ export async function setAttendanceDayClosed(params: {
   closed: boolean;
 }) {
   const { groupId, groupName, date, closed } = params;
+  const ownerId = currentOwnerId();
+  if (!ownerId) throw new Error('Not authenticated');
   const batch = writeBatch(db);
   const now = new Date().toISOString();
   const dayRef = doc(db, 'attendanceDays', attendanceDayId(groupId, date));
@@ -243,6 +272,7 @@ export async function setAttendanceDayClosed(params: {
     updatedAt: now,
     ...(closed ? { closedAt: now } : { closedAt: undefined }),
     createdAt: now,
+    ...( { ownerId } as any ),
   };
 
   batch.set(dayRef, stripUndefinedDeep(payload), { merge: true });
@@ -260,6 +290,8 @@ export async function saveAttendanceForDay(params: {
   }>;
 }) {
   const { groupId, groupName, date, rows } = params;
+  const ownerId = currentOwnerId();
+  if (!ownerId) throw new Error('Not authenticated');
   const batch = writeBatch(db);
   const now = new Date().toISOString();
 
@@ -276,6 +308,7 @@ export async function saveAttendanceForDay(params: {
       checkIn: now,
       checkOut: null,
       markedAt: now,
+      ...( { ownerId } as any ),
     };
     batch.set(ref, stripUndefinedDeep(payload), { merge: true });
   });
@@ -289,6 +322,7 @@ export async function saveAttendanceForDay(params: {
     closedAt: now,
     updatedAt: now,
     createdAt: now,
+    ...( { ownerId } as any ),
   };
   batch.set(dayRef, stripUndefinedDeep(dayPayload), { merge: true });
 
@@ -324,6 +358,8 @@ export function subscribeUserProfile(
 
 export async function upsertUserProfile(userId: string, profile: UserProfile) {
   const ref = doc(db, 'users', userId);
-  const payload: UserProfile = { ...profile, updatedAt: new Date().toISOString() };
+  const ownerId = currentOwnerId();
+  if (!ownerId) throw new Error('Not authenticated');
+  const payload: UserProfile = { ...profile, updatedAt: new Date().toISOString(), ...( { ownerId } as any ) };
   await setDoc(ref, stripUndefinedDeep(payload), { merge: true });
 }

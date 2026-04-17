@@ -140,7 +140,7 @@ function AddGroupModal({
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-end gap-2 px-4 sm:px-6 py-4 border-t border-border-default bg-surface-secondary/30">
+      <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-4 sm:px-6 py-4 border-t border-border-default bg-surface-secondary/30 pb-[max(env(safe-area-inset-bottom),16px)]">
         <button onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface-secondary border border-border-default transition-colors">{t('common.cancel', 'Bekor qilish')}</button>
         <button disabled={isSubmitting} onClick={handleCreate} className="px-5 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-semibold hover:bg-navy-800 transition-colors shadow-sm disabled:opacity-60">{t('groups.addModal.create', 'Guruh yaratish')}</button>
       </div>
