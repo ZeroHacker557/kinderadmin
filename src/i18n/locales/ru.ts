@@ -6,12 +6,20 @@ export const ru = {
       groups: "Группы",
       employees: "Сотрудники",
       finances: "Финансы",
-      attendance: "Посещаемость"
+      attendance: "Посещаемость",
+      parents: "Родители",
+      billing: "Биллинг",
+      reports: "Отчёты"
     },
     system: {
       settings: "Настройки",
       help: "Помощь",
       logout: "Выйти"
+    },
+    roles: {
+      admin: "Администратор",
+      manager: "Менеджер",
+      staff: "Сотрудник"
     },
     common: {
       save: "Сохранить",
@@ -28,6 +36,7 @@ export const ru = {
       step: "Шаг",
       status: "Статус",
       action: "Действие",
+      menu: "Меню",
       viewAll: "Смотреть все",
       downloadReport: "Отчет",
       close: "Закрыть",
@@ -64,7 +73,16 @@ export const ru = {
       statusLate: "Опоздал",
       statusAbsent: "Отсутствует",
       locale: "ru-RU",
-      currency: "сум"
+      currency: "сум",
+      filtered: "отфильтровано",
+      active: "активных",
+      listView: "Список",
+      gridView: "Сетка",
+      previousPage: "Предыдущая страница",
+      nextPage: "Следующая страница",
+      paginationShowing: "{{start}}-{{end}} из {{total}} результатов",
+      collapse: "Свернуть",
+      expand: "Развернуть"
     },
     header: {
       searchMobilePlaceholder: "Ищите детей, сотрудников и записи..."
@@ -89,6 +107,7 @@ export const ru = {
       },
       charts: {
         incomeExpense: "Доход и Расход",
+        last7Days: "Последние 7 дней",
         income: "Доход",
         expense: "Расход"
       },
@@ -489,6 +508,10 @@ export const ru = {
         notes: "Заметки",
         notesPlaceholder: "Дополнительная информация..."
       },
+      editModal: {
+        title: "Редактировать профиль",
+        subtitle: "Измените данные сотрудника"
+      },
       detail: {
         title: "Профиль сотрудника",
         tenure: {
@@ -611,7 +634,8 @@ export const ru = {
         addFirst: "Добавить первую транзакцию"
       },
       addModal: {
-        title: "Добавить транзакцию"
+        title: "Добавить транзакцию",
+        subtitle: "Введите доход или расход"
       }
     },
     attendance: {
@@ -686,10 +710,16 @@ export const ru = {
       form: {
         welcome: "Добро пожаловать",
         subtitle: "Войдите в панель управления",
+        registerTitle: "Регистрация",
+        registerSubtitle: "Сначала создайте аккаунт, затем войдите в систему.",
+        name: "Имя",
+        namePlaceholder: "Ваше имя",
         email: "Электронная почта",
         password: "Пароль",
         remember: "Запомнить меня",
         forgot: "Забыли пароль?",
+        googleLogin: "Войти через Google",
+        googleError: "Ошибка входа через Google",
         loginBtn: "Войти",
         checking: "Проверка...",
         privacy: "Защищено шифрованием. Политика конфиденциальности",
@@ -742,10 +772,234 @@ export const ru = {
         lang: "Язык системы",
         langs: {
           uz: "🇺🇿 O'zbek tili",
-          ru: "🇷🇺 Русский",
-          en: "🇬🇧 English"
+          ru: "🇷🇺 Русский"
         }
       }
+    },
+    help: {
+      badge: "Поддержка",
+      title: "Помощь и поддержка",
+      subtitle: "Если в системе возникла проблема или вопрос, свяжитесь с нами по контактам ниже.",
+      contactPerson: "Ответственное лицо",
+      call: "Позвонить",
+      telegram: "Telegram",
+      email: "Email",
+      noteTitle: "Перед обращением",
+      tip1: "Укажите, в каком разделе возникла проблема (Дети, Группы, Финансы и т.д.).",
+      tip2: "По возможности отправьте скриншот или текст ошибки.",
+      tip3: "Кратко опишите, когда началась проблема.",
+      footer: "Если это техническая проблема, мы постараемся помочь вам как можно быстрее."
+    },
+    parents: {
+      eyebrow: "Справочник семей",
+      title: "Родители",
+      subtitle: "Просматривайте контакты родителей, привязанных детей и состояние оплаты в одном каталоге.",
+      searchPlaceholder: "Поиск по имени родителя, телефону или имени ребёнка",
+      stats: {
+        totalParents: "Всего родителей",
+        totalParentsSubtitle: "Уникальные контакты по всем детям",
+        uniqueFamilies: "Уникальные семьи",
+        uniqueFamiliesSubtitle: "Сгруппированы по общим детям",
+        overdueParents: "Родители с просрочкой",
+        overdueParentsSubtitle: "Требуется контроль оплаты",
+        multiChildFamilies: "Многодетные семьи",
+        multiChildFamiliesSubtitle: "Родители с несколькими детьми"
+      },
+      filters: {
+        relation: "Родство",
+        allRelations: "Все отношения",
+        mother: "Мать",
+        father: "Отец",
+        guardian: "Опекун",
+        paymentSummary: "Статус оплаты"
+      },
+      status: {
+        paid: "Оплачено",
+        partial: "Частично",
+        overdue: "Просрочено",
+        pending: "В ожидании"
+      },
+      meta: {
+        showing: "Показано",
+        totalChildren: "Привязанные дети"
+      },
+      table: {
+        parent: "Родитель",
+        contact: "Контакт",
+        relation: "Родство",
+        children: "Дети",
+        paymentHealth: "Статус оплаты",
+        lastPayment: "Месяц последней оплаты"
+      },
+      common: {
+        children: "детей"
+      },
+      counts: {
+        paid: "Оплачено",
+        partial: "Частично",
+        pending: "В ожидании",
+        overdue: "Просрочено"
+      },
+      card: {
+        children: "Привязанные дети",
+        lastPayment: "Последняя оплата"
+      },
+      pagination: {
+        summary: "Показано {{start}}-{{end}} из {{total}} родителей"
+      },
+      insight: {
+        title: "Информация по каталогу",
+        description: "Родители с просрочкой: {{overdue}} • Многодетные контакты: {{multiChild}} • Всего привязанных детей: {{children}}"
+      },
+      empty: {
+        title: "Родители не найдены",
+        description: "Попробуйте изменить поиск или фильтры. Записи родителей автоматически создаются из профиля каждого ребёнка."
+      },
+      actions: {
+        export: "Экспорт CSV"
+      }
+    },
+    billing: {
+      kicker: "Операции по оплате",
+      title: "Биллинг",
+      subtitle: "Отслеживайте балансы оплаты, проверяйте состояние платежей и регистрируйте оплату детей.",
+      stats: {
+        totalExpected: "Ожидаемая сумма",
+        totalCollected: "Собранная сумма",
+        overdueAmount: "Сумма просрочки",
+        collectionRate: "Процент сбора"
+      },
+      search: {
+        placeholder: "Поиск по ребёнку, группе или родителю"
+      },
+      filters: {
+        all: "Все",
+        paid: "Оплачено",
+        partial: "Частично",
+        overdue: "Просрочено",
+        pending: "В ожидании"
+      },
+      table: {
+        child: "Ребёнок",
+        group: "Группа",
+        parents: "Родители",
+        due: "К оплате",
+        paid: "Оплачено",
+        balance: "Баланс",
+        status: "Статус",
+        dates: "Даты",
+        method: "Метод",
+        action: "Действие",
+        latestPayment: "Последняя оплата",
+        dueDate: "Срок оплаты",
+        paidDate: "Дата оплаты",
+        noParent: "Родитель не привязан"
+      },
+      actions: {
+        recordPayment: "Записать оплату",
+        export: "Экспорт CSV"
+      },
+      dialog: {
+        title: "Записать оплату",
+        amount: "Сумма",
+        paymentDate: "Дата оплаты",
+        paymentMethod: "Метод оплаты",
+        note: "Примечание",
+        notePlaceholder: "Необязательное примечание к этой оплате",
+        currentBalance: "Текущий баланс",
+        latestDueAmount: "Сумма к оплате",
+        cancel: "Отмена",
+        submit: "Сохранить оплату",
+        saving: "Сохранение..."
+      },
+      loading: "Загрузка данных биллинга...",
+      empty: {
+        title: "Записи биллинга не найдены",
+        description: "Попробуйте изменить поиск или фильтр. Строки биллинга формируются из данных оплаты детей."
+      },
+      toast: {
+        exportSuccess: "Отчёт по биллингу экспортирован.",
+        exportEmpty: "Нет данных для экспорта.",
+        paymentSuccess: "Оплата успешно записана.",
+        paymentError: "Ошибка при записи оплаты.",
+        invalidAmount: "Пожалуйста, введите корректную сумму."
+      }
+    },
+    reports: {
+      badge: "Аналитика (только чтение)",
+      title: "Отчёты и аналитика",
+      subtitle: "Мониторинг финансовых показателей, качества посещаемости и операционного состояния в одном отчёте.",
+      export: "Экспорт CSV",
+      periodTitle: "Период отчёта",
+      rangeAllDescription: "Показана аналитика по всем доступным записям.",
+      rangeDescription: "Показана аналитика с {{start}} по {{end}}.",
+      ranges: {
+        today: "Сегодня",
+        week: "Эта неделя",
+        month: "Этот месяц",
+        quarter: "Этот квартал",
+        all: "Всё время"
+      },
+      activeChildren: "Активные дети",
+      activeChildrenHelper: "Зачисленные на данный момент",
+      activeEmployees: "Активные сотрудники",
+      activeEmployeesHelper: "Доступные сотрудники",
+      monthlyIncome: "Ежемесячный доход",
+      monthlyIncomeHelper: "Доход за текущий месяц",
+      monthlyExpense: "Ежемесячный расход",
+      monthlyExpenseHelper: "Расходы за текущий месяц",
+      profit: "Прибыль",
+      profitHelper: "Чистый результат за текущий месяц",
+      attendanceRate: "Уровень посещаемости",
+      attendanceRateHelper: "На основе выбранного периода",
+      trendTitle: "Тренд доходов и расходов",
+      trendDescription: "Отслеживайте финансовую динамику за выбранный период.",
+      netResult: "Чистый результат",
+      income: "Доход",
+      expense: "Расход",
+      noTrendTitle: "Нет финансовой активности за выбранный период",
+      noTrendDescription: "Расширьте диапазон дат для сравнения трендов.",
+      revenueBreakdownTitle: "Доход по категориям",
+      revenueBreakdownDescription: "Узнайте, какие источники дохода вносят наибольший вклад.",
+      noIncomeCategoryTitle: "Нет категорий дохода для отображения",
+      noIncomeCategoryDescription: "Аналитика категорий появится после записи транзакций дохода.",
+      expenseBreakdownTitle: "Расходы по категориям",
+      expenseBreakdownDescription: "Определите основные статьи расходов и контролируйте концентрацию затрат.",
+      noExpenseCategoryTitle: "Нет категорий расходов для отображения",
+      noExpenseCategoryDescription: "Аналитика расходов появится после записи транзакций расходов.",
+      groupInsightTitle: "Аналитика посещаемости групп",
+      groupInsightDescription: "Обзор качества посещаемости и плотности зачисления по группам.",
+      noGroupInsightTitle: "Аналитика посещаемости недоступна",
+      noGroupInsightDescription: "Аналитика групп появится после регистрации посещаемости.",
+      groupAttendance: "Посещаемость группы",
+      groupSnapshotTitle: "Обзор групп",
+      groupSnapshotDescription: "Быстрое сравнение охвата посещаемости и зачисленных детей.",
+      noGroupSnapshot: "Нет групп для сравнения за выбранный период.",
+      childrenLabel: "детей",
+      presentRecords: "записей присутствия",
+      overdueInsightTitle: "Аналитика просроченных платежей",
+      overdueInsightDescription: "Приоритизируйте семьи с непогашенными балансами и повторными задержками.",
+      cases: "случаев",
+      totalOutstanding: "Общая задолженность",
+      overdueMonths: "просроченных периодов",
+      noOverdueInsight: "Риск просроченных платежей в текущих записях не обнаружен.",
+      attendanceLeadersTitle: "Лидеры и риски посещаемости",
+      attendanceLeadersDescription: "Выявите лучшие группы и те, что требуют внимания.",
+      topGroup: "Лучшая группа",
+      lowestGroup: "Группа с наименьшей посещаемостью",
+      notAvailable: "Недоступно",
+      periodAttendanceRate: "Посещаемость за выбранный период",
+      presentEntries: "записей присутствия",
+      staffingInsightTitle: "Аналитика персонала",
+      staffingInsightDescription: "Оцените зачисление, кадровые возможности и рентабельность одним взглядом.",
+      childrenPerEmployee: "Детей на сотрудника",
+      filteredProfit: "Прибыль за выбранный период",
+      activeResources: "Активные ресурсы",
+      employeesLabel: "сотрудников",
+      unassignedGroup: "Без группы",
+      unnamedChild: "Без имени",
+      emptyTitle: "Данных для отчётов пока нет",
+      emptyDescription: "Аналитика появится после добавления детей, сотрудников, транзакций или записей посещаемости."
     }
   }
 };

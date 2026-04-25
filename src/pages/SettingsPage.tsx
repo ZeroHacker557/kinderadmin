@@ -16,11 +16,15 @@ import {
 import { app } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProfile, upsertUserProfile } from '@/services/firestore';
+import { seedAllData } from '@/data/seeds/seedFirestore';
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
+  const auth = getAuth(app);
+  const providerIds = auth.currentUser?.providerData.map((provider) => provider.providerId) ?? [];
+  const canChangePassword = providerIds.includes('password');
   
   const tabs = [
     { id: 'profile', label: t('settings.tabs.profile.title'), icon: User, description: t('settings.tabs.profile.desc') },
@@ -31,6 +35,7 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [saved, setSaved] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Profile status
   const [profile, setProfile] = useState({
@@ -81,7 +86,6 @@ export default function SettingsPage() {
     const displayName = `${firstName}${lastName ? ` ${lastName}` : ''}`.trim();
 
     try {
-      const auth = getAuth(app);
       if (!auth.currentUser) throw new Error('No auth user');
 
       // 1) Save profile to Firestore
@@ -96,6 +100,9 @@ export default function SettingsPage() {
       const confirmPassword = profile.confirmPassword.trim();
 
       if (currentPassword || newPasswordValue || confirmPassword) {
+        if (!canChangePassword) {
+          throw new Error(t('settings.password.emailOnlyError', "Parolni faqat email orqali ro'yxatdan o'tgan foydalanuvchi almashtira oladi"));
+        }
         if (!currentPassword || !newPasswordValue) {
           throw new Error("Parolni o'zgartirish uchun joriy va yangi parolni kiriting");
         }
@@ -245,51 +252,100 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="bg-surface-primary rounded-2xl border border-border-default p-5 sm:p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-                        <Lock className="w-5 h-5 text-purple-600" />
+                  {canChangePassword ? (
+                    <div className="bg-surface-primary rounded-2xl border border-border-default p-5 sm:p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                          <Lock className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-text-primary">{t('settings.password.title')}</h3>
+                          <p className="text-xs text-text-tertiary">{t('settings.password.desc')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-text-primary">{t('settings.password.title')}</h3>
-                        <p className="text-xs text-text-tertiary">{t('settings.password.desc')}</p>
-                      </div>
-                    </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className={labelClass}>{t('settings.password.current')}</label>
-                        <input
-                          type="password"
-                          placeholder="••••••••"
-                          value={profile.currentPassword}
-                          onChange={e => setProfile(p => ({ ...p, currentPassword: e.target.value }))}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-4">
                         <div>
-                          <label className={labelClass}>{t('settings.password.new')}</label>
+                          <label className={labelClass}>{t('settings.password.current')}</label>
                           <input
                             type="password"
                             placeholder="••••••••"
-                            value={profile.newPassword}
-                            onChange={e => setProfile(p => ({ ...p, newPassword: e.target.value }))}
+                            value={profile.currentPassword}
+                            onChange={e => setProfile(p => ({ ...p, currentPassword: e.target.value }))}
                             className={inputClass}
                           />
                         </div>
-                        <div>
-                          <label className={labelClass}>{t('settings.password.confirm')}</label>
-                          <input
-                            type="password"
-                            placeholder="••••••••"
-                            value={profile.confirmPassword}
-                            onChange={e => setProfile(p => ({ ...p, confirmPassword: e.target.value }))}
-                            className={inputClass}
-                          />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className={labelClass}>{t('settings.password.new')}</label>
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              value={profile.newPassword}
+                              onChange={e => setProfile(p => ({ ...p, newPassword: e.target.value }))}
+                              className={inputClass}
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClass}>{t('settings.password.confirm')}</label>
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              value={profile.confirmPassword}
+                              onChange={e => setProfile(p => ({ ...p, confirmPassword: e.target.value }))}
+                              className={inputClass}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
+                  ) : (
+                    <div className="bg-surface-primary rounded-2xl border border-border-default p-5 sm:p-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Lock className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-text-primary">{t('settings.password.title')}</h3>
+                          <p className="text-xs text-text-tertiary">
+                            {t('settings.password.emailOnlyHint', "Siz Google orqali kirgansiz. Parolni almashtirish email orqali ro'yxatdan o'tgan akkauntlar uchun mavjud.")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seed Database Section */}
+                  <div className="bg-surface-primary rounded-2xl border border-red-200 p-5 sm:p-6 mt-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <Globe className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-text-primary">Xavfli hudud (Danger Zone)</h3>
+                        <p className="text-xs text-text-tertiary">Barcha ma'lumotlarni o'chirib, test ma'lumotlarini yuklash</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isSeeding}
+                      onClick={async () => {
+                        if (!confirm("Barcha ma'lumotlar o'chib ketadi. Rozimisiz?")) return;
+                        setIsSeeding(true);
+                        try {
+                          await seedAllData();
+                          alert("Ma'lumotlar muvaffaqiyatli tiklandi! Ilovani yangilang.");
+                          window.location.reload();
+                        } catch (e) {
+                          alert("Xatolik: " + (e as Error).message);
+                        } finally {
+                          setIsSeeding(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {isSeeding ? 'Yuklanmoqda...' : "Boshlang'ich ma'lumotlarni yuklash (Seed Database)"}
+                    </button>
                   </div>
                 </div>
               )}
@@ -341,7 +397,6 @@ export default function SettingsPage() {
                     >
                       <option value="uz">{t('settings.appearance.langs.uz')}</option>
                       <option value="ru">{t('settings.appearance.langs.ru')}</option>
-                      <option value="en">{t('settings.appearance.langs.en')}</option>
                     </select>
                   </div>
                 </div>

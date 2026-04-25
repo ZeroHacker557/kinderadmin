@@ -34,7 +34,7 @@ export default function LoginPage() {
     try {
       await loginWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google login xatoligi');
+      setError(err instanceof Error ? err.message : t('login.form.googleError', 'Google orqali kirishda xatolik'));
     }
   };
 
@@ -133,10 +133,10 @@ export default function LoginPage() {
             transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
-              {mode === 'register' ? "Ro'yxatdan o'tish" : t('login.form.welcome')}
+              {mode === 'register' ? t('login.form.registerTitle', "Ro'yxatdan o'tish") : t('login.form.welcome')}
             </h2>
             <p className="mt-1.5 sm:mt-2 text-text-secondary text-sm sm:text-base">
-              {mode === 'register' ? "Avval akkaunt yarating, keyin tizimga kirasiz." : t('login.form.subtitle')}
+              {mode === 'register' ? t('login.form.registerSubtitle', "Avval akkaunt yarating, keyin tizimga kirasiz.") : t('login.form.subtitle')}
             </p>
 
             <AnimatePresence>
@@ -156,7 +156,7 @@ export default function LoginPage() {
               {mode === 'register' && (
                 <div className="space-y-1.5">
                   <label htmlFor="register-name" className="block text-sm font-medium text-text-primary">
-                    Ism
+                    {t('login.form.name', 'Ism')}
                   </label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
@@ -165,7 +165,7 @@ export default function LoginPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Ismingiz"
+                      placeholder={t('login.form.namePlaceholder', 'Ismingiz')}
                       required={mode === 'register'}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-border-default bg-surface-secondary/50 text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200"
                     />
@@ -248,7 +248,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl border border-border-default text-text-primary font-semibold text-sm hover:bg-surface-secondary transition-colors"
               >
-                Google orqali kirish
+                {t('login.form.googleLogin', 'Google orqali kirish')}
               </button>
 
               <motion.button

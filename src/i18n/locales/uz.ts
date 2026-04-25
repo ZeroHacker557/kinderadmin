@@ -5,12 +5,19 @@ export const uz = {
       children: "Bolalar",
       groups: "Guruhlar",
       employees: "Xodimlar",
-      finances: "Moliya"
+      finances: "Moliya",
+      attendance: "Davomat",
+      parents: "Ota-onalar"
     },
     system: {
       settings: "Sozlamalar",
       help: "Yordam",
       logout: "Tizimdan chiqish"
+    },
+    roles: {
+      admin: "Administrator",
+      manager: "Menejer",
+      staff: "Xodim"
     },
     common: {
       save: "Saqlash",
@@ -27,6 +34,7 @@ export const uz = {
       step: "Qadam",
       status: "Holat",
       action: "Amal",
+      menu: "Menyu",
       viewAll: "Barchasini ko'rish",
       downloadReport: "Hisobot",
       close: "Yopish",
@@ -63,7 +71,16 @@ export const uz = {
       statusLate: "Kechikdi",
       statusAbsent: "Kelmadi",
       locale: "uz-UZ",
-      currency: "so'm"
+      currency: "so'm",
+      filtered: "filtrlangan",
+      active: "faol",
+      listView: "Ro'yxat",
+      gridView: "Katak",
+      previousPage: "Oldingi sahifa",
+      nextPage: "Keyingi sahifa",
+      paginationShowing: "{{start}}-{{end}} / {{total}} natija",
+      collapse: "Yig'ish",
+      expand: "Yoyish"
     },
     header: {
       searchMobilePlaceholder: "Bolalar, xodimlar, yozuvlarni qidiring..."
@@ -88,6 +105,7 @@ export const uz = {
       },
       charts: {
         incomeExpense: "Daromad va Xarajat",
+        last7Days: "So'nggi 7 kun",
         income: "Daromad",
         expense: "Xarajat"
       },
@@ -488,6 +506,10 @@ export const uz = {
         notes: "Izohlar",
         notesPlaceholder: "Qo'shimcha ma'lumotlar..."
       },
+      editModal: {
+        title: "Profilni tahrirlash",
+        subtitle: "Xodim ma'lumotlarini tahrirlang"
+      },
       detail: {
         title: "Xodim profili",
         tenure: {
@@ -610,7 +632,63 @@ export const uz = {
         addFirst: "Birinchi tranzaksiyani qo'shish"
       },
       addModal: {
-        title: "Tranzaksiya qo'shish"
+        title: "Tranzaksiya qo'shish",
+        subtitle: "Daromad yoki xarajatni kiriting"
+      }
+    },
+    attendance: {
+      title: "Davomat",
+      chooseGroup: "Guruhni tanlang",
+      controls: {
+        date: "Sana",
+        group: "Guruh"
+      },
+      summary: {
+        rate: "Davomat darajasi"
+      },
+      daily: {
+        title: "Kunlik davomat",
+        closed: "Yopilgan",
+        opening: "Ochilmoqda...",
+        edit: "Tahrirlash",
+        saving: "Saqlanmoqda...",
+        save: "Saqlash"
+      },
+      empty: {
+        groupTitle: "Guruh tanlanmagan",
+        groupDesc: "Avval guruhni tanlang, so'ng davomat belgilang.",
+        noChildrenTitle: "Guruhda bolalar yo'q",
+        noChildrenDesc: "Avval bu guruhga bolalarni biriktiring."
+      },
+      table: {
+        child: "Bola",
+        group: "Guruh",
+        status: "Holat",
+        date: "Sana"
+      },
+      status: {
+        present: "Keldi",
+        late: "Kechikdi",
+        absent: "Kelmadi"
+      },
+      history: {
+        title: "Davomat tarixi",
+        emptyTitle: "Tarix topilmadi",
+        emptyDesc: "Davomat belgilang yoki boshqa sana tanlang.",
+        forDate: "Sana:",
+        date: "Sana",
+        from: "dan",
+        to: "gacha",
+        searchPlaceholder: "Bola ismi...",
+        status: {
+          all: "Barcha holatlar"
+        },
+        mode: {
+          day: "Tanlangan kun",
+          month: "Tanlangan oy",
+          range: "Oraliq",
+          all: "Barchasi"
+        }
       }
     },
     login: {
@@ -630,10 +708,16 @@ export const uz = {
       form: {
         welcome: "Xush kelibsiz",
         subtitle: "Boshqaruv paneliga kiring",
+        registerTitle: "Ro'yxatdan o'tish",
+        registerSubtitle: "Avval akkaunt yarating, keyin tizimga kirasiz.",
+        name: "Ism",
+        namePlaceholder: "Ismingiz",
         email: "Elektron pochta",
         password: "Parol",
         remember: "Eslab qolish",
         forgot: "Parolni unutdingizmi?",
+        googleLogin: "Google orqali kirish",
+        googleError: "Google orqali kirishda xatolik",
         loginBtn: "Kirish",
         checking: "Tekshirilmoqda...",
         privacy: "Korporativ darajadagi shifrlash bilan himoyalangan. Maxfiylik siyosati",
@@ -686,9 +770,77 @@ export const uz = {
         lang: "Tizim tili",
         langs: {
           uz: "🇺🇿 O'zbek tili",
-          ru: "🇷🇺 Русский",
-          en: "🇬🇧 English"
+          ru: "🇷🇺 Русский"
         }
+      }
+    },
+    parents: {
+      eyebrow: "Oila katalogi",
+      title: "Ota-onalar",
+      subtitle: "Ota-ona kontaktlari, bog'langan bolalar va to'lov holatini bitta katalogdan ko'rib chiqing.",
+      searchPlaceholder: "Ota-ona ismi, telefon yoki bola ismi bo'yicha qidiring",
+      stats: {
+        totalParents: "Jami ota-onalar",
+        totalParentsSubtitle: "Barcha bolalar bo'yicha noyob kontaktlar",
+        uniqueFamilies: "Noyob oilalar",
+        uniqueFamiliesSubtitle: "Umumiy bolalar to'plami bo'yicha guruhlangan",
+        overdueParents: "Muddati o'tgan to'lovli ota-onalar",
+        overdueParentsSubtitle: "Hisob-kitob bo'yicha kuzatuv kerak",
+        multiChildFamilies: "Ko'p bolali oilalar",
+        multiChildFamiliesSubtitle: "Bir nechta bolaga bog'langan ota-onalar"
+      },
+      filters: {
+        relation: "Qarindoshlik",
+        allRelations: "Barcha qarindoshliklar",
+        mother: "Ona",
+        father: "Ota",
+        guardian: "Vasiy",
+        paymentSummary: "To'lov holati"
+      },
+      status: {
+        paid: "To'langan",
+        partial: "Qisman",
+        overdue: "Muddati o'tgan",
+        pending: "Kutilmoqda"
+      },
+      meta: {
+        showing: "Ko'rsatilmoqda",
+        totalChildren: "Bog'langan bolalar"
+      },
+      table: {
+        parent: "Ota-ona",
+        contact: "Aloqa",
+        relation: "Qarindoshlik",
+        children: "Bolalar",
+        paymentHealth: "To'lov holati",
+        lastPayment: "Oxirgi to'lov oyi"
+      },
+      common: {
+        children: "bola(lar)"
+      },
+      counts: {
+        paid: "To'langan",
+        partial: "Qisman",
+        pending: "Kutilmoqda",
+        overdue: "Muddati o'tgan"
+      },
+      card: {
+        children: "Bog'langan bolalar",
+        lastPayment: "Oxirgi to'lov"
+      },
+      pagination: {
+        summary: "{{start}}-{{end}} / {{total}} ota-onalar ko'rsatilmoqda"
+      },
+      insight: {
+        title: "Katalog ma'lumoti",
+        description: "Muddati o'tgan ota-onalar: {{overdue}} • Ko'p bolali oila kontaktlari: {{multiChild}} • Katalogdagi jami bolalar: {{children}}"
+      },
+      empty: {
+        title: "Ota-onalar topilmadi",
+        description: "Qidiruv yoki filtrlarni o'zgartirib ko'ring. Ota-ona yozuvlari har bir bola profilidan avtomatik paydo bo'ladi."
+      },
+      actions: {
+        export: "CSV eksport"
       }
     }
   }

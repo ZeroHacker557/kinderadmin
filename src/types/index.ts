@@ -2,16 +2,23 @@
 // KinderAdmin ERP — Core Type Definitions
 // ============================================
 
-export interface User {
-  id: string;
+export type UserRole = 'admin' | 'teacher' | 'accountant' | 'secretary';
+
+export interface AppUser {
+  uid: string;
   email: string;
+  displayName: string;
+  role: UserRole;
+  photoURL?: string;
+  createdAt?: string;
+  // Compatibility aliases
+  id: string;
   name: string;
-  role: 'admin' | 'manager' | 'staff';
-  avatar?: string;
 }
 
 export interface AuthState {
-  user: User | null;
+  user: AppUser | null;
+  userRole: UserRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -82,6 +89,7 @@ export type ChildStatus = 'active' | 'inactive' | 'graduated' | 'trial';
 export type Gender = 'male' | 'female';
 export type BloodType = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 export type PaymentStatus = 'paid' | 'partial' | 'overdue' | 'pending';
+export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'auto';
 
 export interface Parent {
   id: string;

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
-import { categoryConfig } from '@/data/financesData';
-import type { Child, Employee, TransactionType } from '@/types';
+import { categoryConfig } from '@/data/seeds/financesData';
+import type { Child, Employee, TransactionStatus, TransactionType } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface AddTransactionModalProps {
 
 export interface TransactionFormData {
   type: TransactionType;
+  status: TransactionStatus;
   category: string;
   description: string;
   amount: string;
@@ -32,10 +34,12 @@ const expenseCategories = ['salary', 'rent', 'utilities', 'food', 'supplies', 'm
 const childLinkedIncomeCategories = new Set(['tuition', 'registration']);
 
 export default function AddTransactionModal({ isOpen, onClose, onSubmit, children, employees }: AddTransactionModalProps) {
+  const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<TransactionFormData>({
     type: 'income' as TransactionType,
+    status: 'completed',
     category: '',
     description: '',
     amount: '',
@@ -65,7 +69,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSubmit, childre
       await onSubmit(form);
       setSubmitError(null);
       setForm({
-        type: 'income', category: '', description: '', amount: '',
+        type: 'income', status: 'completed', category: '', description: '', amount: '',
         date: new Date().toISOString().split('T')[0], paymentMethod: 'cash',
         childId: '',
         childName: '', employeeId: '', employeeName: '', receiptNumber: '', notes: '',
@@ -79,7 +83,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSubmit, childre
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Yangi tranzaksiya" subtitle="Daromad yoki xarajatni kiritish" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('finances.addModal.title', "Yangi tranzaksiya")} subtitle={t('finances.addModal.subtitle', "Daromad yoki xarajatni kiriting")} size="lg">
       <div className="px-4 sm:px-6 py-5 space-y-4">
         {submitError && (
           <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
@@ -170,6 +174,15 @@ export default function AddTransactionModal({ isOpen, onClose, onSubmit, childre
               <option value="card">💳 Karta</option>
               <option value="transfer">🏦 O'tkazma</option>
               <option value="auto">⚡ Avtomatik</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Holat</label>
+            <select value={form.status} onChange={e => update('status', e.target.value)} className={inputClass}>
+              <option value="completed">{t('common.statusCompleted', 'Bajarildi')}</option>
+              <option value="pending">{t('common.statusPending', 'Kutilmoqda')}</option>
+              <option value="failed">{t('common.statusFailed', 'Muvaffaqiyatsiz')}</option>
+              <option value="cancelled">{t('finances.status.cancelled', 'Bekor qilingan')}</option>
             </select>
           </div>
           <div>

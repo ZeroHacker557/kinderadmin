@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationProps {
   currentPage: number;
@@ -15,6 +16,7 @@ export default function Pagination({
   itemsPerPage,
   onPageChange,
 }: PaginationProps) {
+  const { t } = useTranslation();
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -39,8 +41,11 @@ export default function Pagination({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-3 border-t border-border-default">
       <p className="text-xs sm:text-sm text-text-tertiary order-2 sm:order-1">
-        Showing <span className="font-medium text-text-secondary">{startItem}-{endItem}</span> of{' '}
-        <span className="font-medium text-text-secondary">{totalItems}</span> results
+        {t('common.paginationShowing', '{{start}}-{{end}} / {{total}} natija', {
+          start: startItem,
+          end: endItem,
+          total: totalItems,
+        })}
       </p>
 
       <div className="flex items-center gap-1 order-1 sm:order-2">
@@ -48,7 +53,7 @@ export default function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className="p-1.5 sm:p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-          aria-label="Previous page"
+          aria-label={t('common.previousPage', 'Oldingi sahifa')}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -75,7 +80,7 @@ export default function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className="p-1.5 sm:p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-          aria-label="Next page"
+          aria-label={t('common.nextPage', 'Keyingi sahifa')}
         >
           <ChevronRight className="w-4 h-4" />
         </button>

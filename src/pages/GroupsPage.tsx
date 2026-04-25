@@ -6,31 +6,85 @@ import {
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import type { Child, Employee, GroupInfo } from '@/types';
-import { createGroup, deleteGroup, subscribeChildren, subscribeEmployees, subscribeGroups, updateEmployee } from '@/services/firestore';
+import { createGroup, deleteGroup, subscribeChildren, subscribeEmployees, subscribeGroups, updateEmployee, updateGroup } from '@/services/firestore';
+import { CardSkeleton } from '@/components/ui/Skeleton';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+
+const groupSchema = z.object({
+  name: z.string().min(2, 'Guruh nomi kiritilishi shart'),
+  ageRange: z.string().min(1, 'Yosh oralig\'i kiritilishi shart'),
+  capacity: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
+    message: 'Sig\'im kamida 1 bo\'lishi kerak',
+  }),
+  teacher: z.string().optional(),
+  color: z.string().optional(),
+});
+
+type GroupFormData = z.infer<typeof groupSchema>;
 
 function AddGroupModal({
   isOpen,
   onClose,
   onSubmit,
   employees,
+  mode = 'add',
+  initialGroup = null,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (payload: Omit<GroupInfo, 'id'>, selectedStaffIds: string[]) => Promise<unknown>;
   employees: Employee[];
+  mode?: 'add' | 'edit';
+  initialGroup?: GroupInfo | null;
 }) {
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    name: '', ageRange: '', capacity: '', teacher: '', color: '#3b82f6',
-  });
-  const [staffSearch, setStaffSearch] = useState('');
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [staffSearch, setStaffSearch] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<GroupFormData>({
+    resolver: zodResolver(groupSchema),
+    defaultValues: {
+      name: initialGroup?.name ?? '',
+      ageRange: initialGroup?.ageRange ?? '',
+      capacity: initialGroup ? String(initialGroup.capacity) : '',
+      teacher: initialGroup?.teacher ?? '',
+      color: initialGroup?.color ?? '#3b82f6',
+    }
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({
+      name: initialGroup?.name ?? '',
+      ageRange: initialGroup?.ageRange ?? '',
+      capacity: initialGroup ? String(initialGroup.capacity) : '',
+      teacher: initialGroup?.teacher ?? '',
+      color: initialGroup?.color ?? '#3b82f6',
+    });
+    setSelectedStaffIds(() => {
+      if (!initialGroup) return [];
+      return employees
+        .filter((e) => e.assignedGroupId === initialGroup.id || e.assignedGroup === initialGroup.name)
+        .map((e) => e.id);
+    });
+    setSubmitError(null);
+  }, [employees, initialGroup, isOpen, reset]);
 
   const inputClass = 'w-full px-3.5 py-2.5 rounded-xl border border-border-default bg-surface-secondary/50 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200';
-  const labelClass = 'block text-sm font-medium text-text-primary mb-1.5';
 
   const colorOptions = ['#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#06b6d4', '#ec4899', '#ef4444', '#84cc16'];
   const filteredStaff = employees.filter(employee => {
@@ -38,27 +92,21 @@ function AddGroupModal({
     if (!query) return true;
     return `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(query) || employee.position.toLowerCase().includes(query);
   });
-  const handleCreate = async () => {
-    if (isSubmitting) return;
-    if (!form.name.trim() || !form.capacity) return;
-    setIsSubmitting(true);
+  const handleCreate = async (data: GroupFormData) => {
     try {
       await onSubmit({
-        name: form.name.trim(),
-        ageRange: form.ageRange.trim(),
-        capacity: Number(form.capacity),
+        name: data.name.trim(),
+        ageRange: data.ageRange.trim(),
+        capacity: Number(data.capacity),
         currentCount: 0,
-        teacher: form.teacher.trim(),
-        color: form.color,
+        teacher: data.teacher?.trim() || '',
+        color: data.color || '#3b82f6',
       }, selectedStaffIds);
       setSubmitError(null);
-      setForm({ name: '', ageRange: '', capacity: '', teacher: '', color: '#3b82f6' });
       setSelectedStaffIds([]);
       onClose();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Guruh yaratishda xatolik");
-    } finally {
-      setIsSubmitting(false);
     }
   };
   const toggleStaff = (employeeId: string) => {
@@ -68,29 +116,43 @@ function AddGroupModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('groups.addModal.title', 'Yangi guruh yaratish')} subtitle={t('groups.addModal.subtitle', "Guruh ma'lumotlarini to'ldiring")} size="lg">
-      <div className="px-4 sm:px-6 py-5 space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === 'edit' ? t('common.edit', 'Tahrirlash') : t('groups.addModal.title', 'Yangi guruh yaratish')}
+      subtitle={mode === 'edit' ? t('groups.detail.aboutTitle', 'Guruh haqida') : t('groups.addModal.subtitle', "Guruh ma'lumotlarini to'ldiring")}
+      size="lg"
+      footer={
+        <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-4 sm:px-6 py-4 border-t border-border-default bg-surface-secondary/30 pb-[max(env(safe-area-inset-bottom),16px)]">
+          <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel', 'Bekor qilish')}</Button>
+          <Button type="button" onClick={handleSubmit(handleCreate)} isLoading={isSubmitting}>{t('groups.addModal.create', 'Guruh yaratish')}</Button>
+        </div>
+      }
+    >
+      <div className="px-4 sm:px-6 py-5 space-y-4 pb-6">
         {submitError && (
           <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-sm text-red-700">
             {submitError}
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><label className={labelClass}>{t('groups.addModal.name', 'Guruh nomi')} *</label><input type="text" value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} placeholder={t('groups.addModal.namePlaceholder', 'Masalan: Quyoshlar')} className={inputClass} /></div>
-          <div><label className={labelClass}>{t('groups.addModal.ageRange', "Yosh oralig'i")} *</label><input type="text" value={form.ageRange} onChange={(e) => setForm(prev => ({ ...prev, ageRange: e.target.value }))} placeholder={t('groups.addModal.ageRangePlaceholder', 'Masalan: 3-4')} className={inputClass} /></div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><label className={labelClass}>{t('groups.addModal.capacity', "Sig'imi")} *</label><input type="number" value={form.capacity} onChange={(e) => setForm(prev => ({ ...prev, capacity: e.target.value }))} placeholder={t('groups.addModal.capacityPlaceholder', '20')} className={inputClass} /></div>
-          <div><label className={labelClass}>{t('groups.addModal.mainTeacher', 'Asosiy tarbiyachi')}</label><input type="text" value={form.teacher} onChange={(e) => setForm(prev => ({ ...prev, teacher: e.target.value }))} placeholder={t('groups.addModal.fullName', "To'liq ism")} className={inputClass} /></div>
-        </div>
-        <div>
-          <label className={labelClass}>{t('groups.addModal.color', 'Guruh rangi')}</label>
-          <div className="flex gap-2">
-            {colorOptions.map(c => (
-              <button key={c} onClick={() => setForm(prev => ({ ...prev, color: c }))} className={`w-8 h-8 rounded-xl transition-all duration-200 ${form.color === c ? 'ring-2 ring-offset-2 ring-navy-900 scale-110' : 'hover:scale-105'}`} style={{ backgroundColor: c }} />
-            ))}
+        <form id="add-group-form" onSubmit={handleSubmit(handleCreate)}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <Input label={t('groups.addModal.name', 'Guruh nomi') + ' *'} placeholder={t('groups.addModal.namePlaceholder', 'Masalan: Quyoshlar')} {...register('name')} error={errors.name?.message} />
+            <Input label={t('groups.addModal.ageRange', "Yosh oralig'i") + ' *'} placeholder={t('groups.addModal.ageRangePlaceholder', 'Masalan: 3-4')} {...register('ageRange')} error={errors.ageRange?.message} />
           </div>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <Input label={t('groups.addModal.capacity', "Sig'imi") + ' *'} type="number" placeholder={t('groups.addModal.capacityPlaceholder', '20')} {...register('capacity')} error={errors.capacity?.message} />
+            <Input label={t('groups.addModal.mainTeacher', 'Asosiy tarbiyachi')} placeholder={t('groups.addModal.fullName', "To'liq ism")} {...register('teacher')} error={errors.teacher?.message} />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-text-primary mb-1.5">{t('groups.addModal.color', 'Guruh rangi')}</label>
+            <div className="flex gap-2">
+              {colorOptions.map(c => (
+                <button type="button" key={c} onClick={() => setValue('color', c)} className={`w-8 h-8 rounded-xl transition-all duration-200 ${watch('color') === c ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-105'}`} style={{ backgroundColor: c }} />
+              ))}
+            </div>
+          </div>
+        </form>
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-text-primary">
@@ -140,10 +202,6 @@ function AddGroupModal({
           </div>
         </div>
       </div>
-      <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-4 sm:px-6 py-4 border-t border-border-default bg-surface-secondary/30 pb-[max(env(safe-area-inset-bottom),16px)]">
-        <button onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface-secondary border border-border-default transition-colors">{t('common.cancel', 'Bekor qilish')}</button>
-        <button disabled={isSubmitting} onClick={handleCreate} className="px-5 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-semibold hover:bg-navy-800 transition-colors shadow-sm disabled:opacity-60">{t('groups.addModal.create', 'Guruh yaratish')}</button>
-      </div>
     </Modal>
   );
 }
@@ -154,14 +212,24 @@ export default function GroupsPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editGroup, setEditGroup] = useState<GroupInfo | null>(null);
+  const [groupMenuId, setGroupMenuId] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let refs = 0;
+    const checkState = () => {
+      refs++;
+      if (refs >= 3) setIsLoading(false);
+    };
+
     const unsubs = [
-      subscribeGroups(setGroups),
-      subscribeChildren(setChildren),
-      subscribeEmployees(setEmployees),
+      subscribeGroups((d: GroupInfo[]) => { setGroups(d); checkState(); }),
+      subscribeChildren((d: Child[]) => { setChildren(d); checkState(); }),
+      subscribeEmployees((d: Employee[]) => { setEmployees(d); checkState(); }),
     ];
     return () => unsubs.forEach((u) => u());
   }, []);
@@ -226,16 +294,40 @@ export default function GroupsPage() {
         });
       }),
     );
+    // onSnapshot listener (subscribeGroups) will auto-add the new group to state
+    toast.success(t('common.added', "Ajoyib! Yangi guruh qo'shildi"));
+  };
 
-    setGroups((prev) => {
-      const next = [{ ...payload, id: created.id }, ...prev];
-      const seen = new Set<string>();
-      return next.filter((item) => {
-        if (seen.has(item.id)) return false;
-        seen.add(item.id);
-        return true;
-      });
-    });
+  const handleUpdateGroup = async (payload: Omit<GroupInfo, 'id'>, selectedStaffIds: string[]) => {
+    if (!editGroup) return;
+    await updateGroup({ ...payload, id: editGroup.id });
+
+    // Update staff assignments (best-effort)
+    await Promise.all(
+      employees.map(async (employee) => {
+        const shouldBeAssigned = selectedStaffIds.includes(employee.id);
+        const isAssigned =
+          employee.assignedGroupId === editGroup.id || employee.assignedGroup === editGroup.name;
+
+        if (shouldBeAssigned && !isAssigned) {
+          await updateEmployee({
+            ...employee,
+            assignedGroupId: editGroup.id,
+            assignedGroup: payload.name,
+          });
+        }
+        if (!shouldBeAssigned && isAssigned) {
+          await updateEmployee({
+            ...employee,
+            assignedGroupId: undefined,
+            assignedGroup: undefined,
+          });
+        }
+      }),
+    );
+
+    setShowEditModal(false);
+    setEditGroup(null);
   };
 
   return (
@@ -277,8 +369,11 @@ export default function GroupsPage() {
         </div>
       </motion.div>
 
-      {/* Groups Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Grid */}
+      {isLoading ? (
+        <CardSkeleton count={8} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
         {groupsWithCounts.map((group, index) => {
           const occupancy = Math.round((group.currentCount / group.capacity) * 100);
           return (
@@ -304,13 +399,59 @@ export default function GroupsPage() {
                     <p className="text-xs text-text-tertiary">{group.ageRange} {t('common.years', 'yosh')}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary opacity-0 group-hover:opacity-100 transition-all" onClick={(e) => { e.stopPropagation(); }}>
+                <div className="relative flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGroupMenuId((prev) => (prev === group.id ? null : group.id));
+                    }}
+                  >
                     <MoreHorizontal className="w-4 h-4" />
                   </button>
-                  <button className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all" onClick={async (e) => { e.stopPropagation(); try { await deleteGroup(group.id); } catch (error) { alert(error instanceof Error ? error.message : "Guruh o'chirishda xatolik"); } }}>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const childCount = children.filter(
+                        (c) => c.groupId === group.id || c.group === group.name,
+                      ).length;
+                      const message = childCount > 0
+                        ? t('groups.confirmDeleteWithChildren', `"${group.name}" guruhida ${childCount} ta bola bor. Haqiqatan o'chirmoqchimisiz?`)
+                        : t('groups.confirmDelete', `"${group.name}" guruhini o'chirmoqchimisiz?`);
+                      if (!confirm(message)) return;
+                      try {
+                        await deleteGroup(group.id);
+                        // onSnapshot listener will auto-remove from state
+                        toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Guruh o'chirishda xatolik");
+                      }
+                    }}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
+
+                  {groupMenuId === group.id && (
+                    <div
+                      className="absolute right-0 top-9 w-56 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-30"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGroupMenuId(null);
+                          setEditGroup(group as any);
+                          setShowEditModal(true);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
+                      >
+                        {t('common.edit', 'Tahrirlash')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -370,6 +511,7 @@ export default function GroupsPage() {
           <p className="text-xs text-text-tertiary mt-1">{t('groups.addCard.subtitle', 'Bolalar uchun yangi guruh oching')}</p>
         </motion.div>
       </div>
+      )}
 
       <Modal
         isOpen={isDetailOpen && Boolean(selectedGroup)}
@@ -462,7 +604,8 @@ export default function GroupsPage() {
         )}
       </Modal>
 
-      <AddGroupModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSubmit={handleCreateGroup} employees={employees} />
+      <AddGroupModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSubmit={handleCreateGroup} employees={employees} mode="add" initialGroup={null} />
+      <AddGroupModal isOpen={showEditModal} onClose={() => { setShowEditModal(false); setEditGroup(null); }} onSubmit={handleUpdateGroup} employees={employees} mode="edit" initialGroup={editGroup} />
     </div>
   );
 }

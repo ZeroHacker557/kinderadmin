@@ -13,8 +13,10 @@ import Pagination from '@/components/ui/Pagination';
 import EmptyState from '@/components/ui/EmptyState';
 import type { Department, Employee, EmployeeFilters, EmployeeSortConfig, EmployeeSortField } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import { createDepartment, createEmployee, deleteDepartment, deleteEmployee, subscribeDepartments, subscribeEmployees, updateEmployee } from '@/services/firestore';
 import { downloadCsv } from '@/utils/csv';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 
 function formatSalary(amount: number): string {
   if (amount >= 1000000) {
@@ -86,11 +88,19 @@ export default function EmployeesPage() {
   const [contextMenu, setContextMenu] = useState<string | null>(null);
   const [filters, setFilters] = useState<EmployeeFilters>({ search: '', department: '', status: '', position: '' });
   const [sort, setSort] = useState<EmployeeSortConfig>({ field: 'name', direction: 'asc' });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeEmployees = subscribeEmployees(setEmployees);
-    const unsubscribeDepartments = subscribeDepartments((rows) => {
+    let refs = 0;
+    const checkState = () => {
+      refs++;
+      if (refs >= 2) setIsLoading(false);
+    };
+
+    const unsubscribeEmployees = subscribeEmployees((d: Employee[]) => { setEmployees(d); checkState(); });
+    const unsubscribeDepartments = subscribeDepartments((rows: Department[]) => {
       setCustomDepartments(rows.filter((d) => !FIXED_DEPARTMENTS.some((f) => f.id === d.id)));
+      checkState();
     });
     return () => {
       unsubscribeEmployees();
@@ -206,12 +216,12 @@ export default function EmployeesPage() {
       email: '',
       hireDate: data.hireDate,
       salary: Number(data.salary || 0),
-      workSchedule: data.workSchedule,
-      education: data.education,
-      experience: data.experience,
-      address: data.address,
-      emergencyContact: data.emergencyContact,
-      emergencyPhone: data.emergencyPhone,
+      workSchedule: data.workSchedule || '',
+      education: data.education || '',
+      experience: data.experience || '',
+      address: data.address || '',
+      emergencyContact: data.emergencyContact || '',
+      emergencyPhone: data.emergencyPhone || '',
       documents: [],
       skills: [],
       notes: data.notes,
@@ -219,19 +229,12 @@ export default function EmployeesPage() {
       performanceRating: 0,
     };
     try {
-      const created = await createEmployee(payload);
-      setEmployees((prev) => {
-        const next = [{ ...payload, id: created.id }, ...prev];
-        const seen = new Set<string>();
-        return next.filter((item) => {
-          if (seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        });
-      });
+      await createEmployee(payload);
+      // onSnapshot listener will auto-add the new employee to state
       setShowAddModal(false);
+      toast.success(t('common.added', "Ajoyib! Yangi xodim qo'shildi"));
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Xodim qo'shishda xatolik");
+      toast.error(error instanceof Error ? error.message : "Xodim qo'shishda xatolik");
     }
   };
 
@@ -243,27 +246,28 @@ export default function EmployeesPage() {
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      address: data.address,
-      emergencyContact: data.emergencyContact,
-      emergencyPhone: data.emergencyPhone,
+      address: data.address || '',
+      emergencyContact: data.emergencyContact || '',
+      emergencyPhone: data.emergencyPhone || '',
       departmentId: data.departmentId,
       department: dept?.name ?? editEmployee.department,
       position: data.position,
       salary: Number(data.salary || editEmployee.salary),
       hireDate: data.hireDate,
-      workSchedule: data.workSchedule,
-      education: data.education,
-      experience: data.experience,
+      workSchedule: data.workSchedule || '',
+      education: data.education || '',
+      experience: data.experience || '',
       notes: data.notes,
     };
     try {
       await updateEmployee(updated);
-      setEmployees((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+      // onSnapshot listener will auto-update employee in state
       setEditEmployee(null);
       setShowAddModal(false);
       setShowDetail(false);
+      toast.success(t('common.saved', "Saqlandi"));
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Xodim tahrirlashda xatolik");
+      toast.error(error instanceof Error ? error.message : "Xodim tahrirlashda xatolik");
     }
   };
 
@@ -313,8 +317,12 @@ export default function EmployeesPage() {
 
   // Summary stats
   const activeCount = employees.filter(e => e.status === 'active').length;
-  const avgSalary = Math.round(employees.reduce((s, e) => s + e.salary, 0) / employees.length);
-  const avgRating = (employees.reduce((s, e) => s + e.performanceRating, 0) / employees.length).toFixed(1);
+  const avgSalary = employees.length
+    ? Math.round(employees.reduce((s, e) => s + e.salary, 0) / employees.length)
+    : 0;
+  const avgRating = employees.length
+    ? (employees.reduce((s, e) => s + e.performanceRating, 0) / employees.length).toFixed(1)
+    : '0.0';
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -572,7 +580,20 @@ export default function EmployeesPage() {
               <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:bg-surface-secondary border border-border-default transition-colors">
                 {t('employees.page.bulk.changeDepartment', "Bo'limni o'zgartirish")}
               </button>
-              <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 border border-red-500/20 transition-colors">
+              <button
+                onClick={async () => {
+                  if (!confirm(t('employees.page.bulk.confirmDelete', `${selectedIds.size} ta xodimni o'chirmoqchimisiz?`))) return;
+                  try {
+                    await Promise.all(Array.from(selectedIds).map((id) => deleteEmployee(id)));
+                    // onSnapshot listener will auto-remove deleted employees
+                    setSelectedIds(new Set());
+                    toast.success(t('common.deletedMultiple', `${selectedIds.size} ta ma'lumot o'chirildi`));
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 border border-red-500/20 transition-colors"
+              >
                 {t('common.delete', "O'chirish")}
               </button>
               <button onClick={() => setSelectedIds(new Set())} className="p-1 rounded-lg text-text-tertiary hover:text-text-primary transition-colors">
@@ -583,7 +604,9 @@ export default function EmployeesPage() {
         )}
 
         {/* LIST VIEW */}
-        {viewMode === 'list' && filteredEmployees.length > 0 && (
+        {isLoading ? (
+          <div className="bg-surface-primary border border-border-default rounded-2xl p-4 mt-4"><TableSkeleton rows={8} /></div>
+        ) : viewMode === 'list' && filteredEmployees.length > 0 && (
           <>
             {/* Mobile list */}
             <div className="sm:hidden divide-y divide-border-subtle">
@@ -736,8 +759,15 @@ export default function EmployeesPage() {
                               </button>
                               <div className="border-t border-border-subtle my-1" />
                               <button onClick={async () => {
-                                await deleteEmployee(emp.id);
-                                setEmployees((prev) => prev.filter((e) => e.id !== emp.id));
+                                if (!confirm(t('employees.confirmDelete', "Bu xodimni o'chirmoqchimisiz?"))) return;
+                                try {
+                                  await deleteEmployee(emp.id);
+                                  // onSnapshot listener will auto-remove from state
+                                  setContextMenu(null);
+                                  toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+                                } catch (error) {
+                                  toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
+                                }
                               }} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2">
                                 <Trash2 className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
                               </button>
@@ -806,7 +836,7 @@ export default function EmployeesPage() {
         )}
 
         {/* Empty state */}
-        {filteredEmployees.length === 0 && (
+        {!isLoading && filteredEmployees.length === 0 && (
           <EmptyState
             icon={<UsersIcon className="w-6 h-6 text-text-tertiary" />}
             title={t('employees.page.empty.title', 'Xodimlar topilmadi')}
@@ -851,6 +881,15 @@ export default function EmployeesPage() {
           setEditEmployee(emp);
           setShowDetail(false);
           setShowAddModal(true);
+        }}
+        onDelete={async (id) => {
+          try {
+            await deleteEmployee(id);
+            setShowDetail(false);
+            toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
+          }
         }}
       />
     </div>

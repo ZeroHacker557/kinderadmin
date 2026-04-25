@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CalendarDays, CheckCircle2, UserX, Users, ListChecks, Download, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import type { AttendanceRecord, Child, GroupInfo } from '@/types';
 import {
   saveAttendanceForDay,
@@ -64,11 +65,11 @@ export default function AttendancePage() {
       return;
     }
 
-    const unsubMeta = subscribeAttendanceDay(selectedGroupId, selectedDate, (meta) => {
+    const unsubMeta = subscribeAttendanceDay(selectedGroupId, selectedDate, (meta: any) => {
       setDayClosed(Boolean(meta?.closed));
     });
-    const unsubRecords = subscribeAttendanceByDate(selectedDate, (rows) => {
-      setDayRecords(rows.filter((r) => r.groupId === selectedGroupId));
+    const unsubRecords = subscribeAttendanceByDate(selectedDate, (rows: AttendanceRecord[]) => {
+      setDayRecords(rows.filter((r: AttendanceRecord) => r.groupId === selectedGroupId));
     });
     return () => {
       unsubMeta();
@@ -91,8 +92,8 @@ export default function AttendancePage() {
       .toISOString()
       .slice(0, 10);
 
-    const unsub = subscribeAttendanceByDateRange(monthStart, monthEnd, (rows) => {
-      setHistory(rows.filter((r) => r.groupId === selectedGroupId));
+    const unsub = subscribeAttendanceByDateRange(monthStart, monthEnd, (rows: AttendanceRecord[]) => {
+      setHistory(rows.filter((r: AttendanceRecord) => r.groupId === selectedGroupId));
     });
     return () => unsub();
   }, [selectedGroupId, selectedDate]);
@@ -140,8 +141,11 @@ export default function AttendancePage() {
         date: selectedDate,
         closed: false,
       });
+      toast.success(t('attendance.daily.reopened', "Davomat qayta ochildi"));
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Davomatni ochishda xatolik");
+      const msg = error instanceof Error ? error.message : "Davomatni ochishda xatolik";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setIsReopening(false);
     }
@@ -162,10 +166,11 @@ export default function AttendancePage() {
           status: (draft[c.id] ?? 'absent') as AttendanceRecord['status'],
         })),
       });
+      toast.success(t('common.saved', "Saqlandi"));
     } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Davomatni saqlashda xatolik",
-      );
+      const msg = error instanceof Error ? error.message : "Davomatni saqlashda xatolik";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }

@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Phone, MapPin, Calendar, Briefcase, Clock,
   GraduationCap, Star, Shield, Award,
-  Users, ChevronRight, TrendingUp,
+  Users, ChevronRight, TrendingUp, Trash2,
 } from 'lucide-react';
 import type { Employee } from '@/types';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ interface EmployeeDetailPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (employee: Employee) => void;
+  onDelete?: (id: string) => void;
 }
 
 function calculateTenure(hireDate: string, units: { month: string; year: string }): string {
@@ -41,7 +42,7 @@ function RatingStars({ rating }: { rating: number }) {
   );
 }
 
-export default function EmployeeDetailPanel({ employee, isOpen, onClose, onEdit }: EmployeeDetailPanelProps) {
+export default function EmployeeDetailPanel({ employee, isOpen, onClose, onEdit, onDelete }: EmployeeDetailPanelProps) {
   if (!employee) return null;
 
   const { t } = useTranslation();
@@ -324,6 +325,17 @@ export default function EmployeeDetailPanel({ employee, isOpen, onClose, onEdit 
 
             {/* Footer actions */}
             <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-t border-border-default bg-surface-secondary/30 flex-shrink-0">
+              <button
+                onClick={() => {
+                  if (confirm(t('employees.detail.actions.confirmDelete', "Xodimni o'chirishga rozimisiz?"))) {
+                    onDelete?.(employee.id);
+                  }
+                }}
+                className="p-2.5 rounded-xl border border-red-500/20 text-red-500 hover:bg-red-50 transition-colors"
+                title={t('common.delete', "O'chirish")}
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
               <button
                 onClick={() => onEdit?.(employee)}
                 className="flex-1 py-2.5 rounded-xl border border-border-default text-sm font-medium text-text-secondary hover:bg-surface-secondary transition-colors"

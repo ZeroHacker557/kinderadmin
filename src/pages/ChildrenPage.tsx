@@ -12,9 +12,11 @@ import Pagination from '@/components/ui/Pagination';
 import EmptyState from '@/components/ui/EmptyState';
 import type { Child, ChildFilters, SortConfig, SortField } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import { createChild, deleteChild, subscribeChildren, subscribeGroups, updateChild } from '@/services/firestore';
 import type { GroupInfo } from '@/types';
 import { downloadCsv } from '@/utils/csv';
+import { TableSkeleton } from '@/components/ui/Skeleton';
 
 function calculateAge(dob: string): number {
   const b = new Date(dob), n = new Date();
@@ -64,10 +66,18 @@ export default function ChildrenPage() {
   const [contextMenu, setContextMenu] = useState<string | null>(null);
   const [filters, setFilters] = useState<ChildFilters>({ search: '', group: '', status: '', gender: '', paymentStatus: '', ageRange: null });
   const [sort, setSort] = useState<SortConfig>({ field: 'name', direction: 'asc' });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribeChildren = subscribeChildren(setChildren);
-    const unsubscribeGroups = subscribeGroups(setGroups);
+    let refs = 0;
+    const checkState = () => {
+      refs++;
+      if (refs >= 2) setIsLoading(false);
+    };
+
+    const unsubscribeChildren = subscribeChildren((d) => { setChildren(d); checkState(); });
+    const unsubscribeGroups = subscribeGroups((d) => { setGroups(d); checkState(); });
+
     return () => {
       unsubscribeChildren();
       unsubscribeGroups();
@@ -133,7 +143,7 @@ export default function ChildrenPage() {
     dateOfBirth: child.dateOfBirth,
     gender: child.gender,
     groupId: child.groupId,
-    status: child.status,
+    status: child.status as "active" | "inactive" | "trial",
     address: child.address ?? '',
     notes: child.notes ?? '',
     parents: child.parents.map(parent => ({
@@ -183,12 +193,12 @@ export default function ChildrenPage() {
       })),
       medical: {
         ...editChild.medical,
-        bloodType: data.medical.bloodType || undefined,
-        allergies: splitList(data.medical.allergies),
-        medications: splitList(data.medical.medications),
-        conditions: splitList(data.medical.conditions),
-        emergencyContact: data.medical.emergencyContact,
-        emergencyPhone: data.medical.emergencyPhone,
+        bloodType: (data.medical.bloodType || undefined) as any,
+        allergies: splitList(data.medical.allergies || ''),
+        medications: splitList(data.medical.medications || ''),
+        conditions: splitList(data.medical.conditions || ''),
+        emergencyContact: data.medical.emergencyContact || '',
+        emergencyPhone: data.medical.emergencyPhone || '',
         doctorName: data.medical.doctorName || undefined,
         doctorPhone: data.medical.doctorPhone || undefined,
         notes: data.medical.notes || undefined,
@@ -216,12 +226,12 @@ export default function ChildrenPage() {
         occupation: parent.occupation || undefined,
       })),
       medical: {
-        bloodType: data.medical.bloodType || undefined,
-        allergies: splitList(data.medical.allergies),
-        medications: splitList(data.medical.medications),
-        conditions: splitList(data.medical.conditions),
-        emergencyContact: data.medical.emergencyContact,
-        emergencyPhone: data.medical.emergencyPhone,
+        bloodType: (data.medical.bloodType || undefined) as any,
+        allergies: splitList(data.medical.allergies || ''),
+        medications: splitList(data.medical.medications || ''),
+        conditions: splitList(data.medical.conditions || ''),
+        emergencyContact: data.medical.emergencyContact || '',
+        emergencyPhone: data.medical.emergencyPhone || '',
         doctorName: data.medical.doctorName || undefined,
         doctorPhone: data.medical.doctorPhone || undefined,
         notes: data.medical.notes || undefined,
@@ -232,24 +242,20 @@ export default function ChildrenPage() {
     try {
       if (editChild) {
         await updateChild(normalizedChild);
-        setChildren((prev) => prev.map((c) => (c.id === normalizedChild.id ? normalizedChild : c)));
+        // onSnapshot listener will auto-update children state
+        setSelectedChild(normalizedChild);
       } else {
         const created = await createChild(stripIdFromEntity(normalizedChild));
-        setChildren((prev) => {
-          const next = [{ ...normalizedChild, id: created.id }, ...prev];
-          const seen = new Set<string>();
-          return next.filter((item) => {
-            if (seen.has(item.id)) return false;
-            seen.add(item.id);
-            return true;
-          });
-        });
+        const createdChild = { ...normalizedChild, id: created.id };
+        // onSnapshot listener will auto-add the new child to state
+        setSelectedChild(createdChild);
       }
+      toast.success(editChild ? t('common.saved', "Saqlandi") : t('common.added', "Ajoyib! Yangi bola qo'shildi"));
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Bola saqlashda xatolik");
+      toast.error(error instanceof Error ? error.message : "Bola saqlashda xatolik");
+      return; // Do not close modal on error
     }
 
-    setSelectedChild(normalizedChild);
     setShowDetail(false);
     closeModal();
   };
@@ -260,13 +266,15 @@ export default function ChildrenPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm(t('children.confirmDelete', "Haqiqatan ham bu bolani o'chirmoqchimisiz?"))) return;
     try {
       await deleteChild(id);
-      setChildren((prev) => prev.filter((c) => c.id !== id));
+      // onSnapshot listener will auto-remove from state
       setContextMenu(null);
       if (selectedChild?.id === id) setShowDetail(false);
+      toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
     } catch (error) {
-      alert(error instanceof Error ? error.message : "O'chirishda xatolik");
+      toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
     }
   };
 
@@ -382,16 +390,24 @@ export default function ChildrenPage() {
             <div className="flex items-center gap-2">
               <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:bg-surface-secondary border border-border-default transition-colors">{t('common.changeGroup', 'Guruhni o\'zgartirish')}</button>
               <button onClick={async () => {
-                await Promise.all(Array.from(selectedIds).map((id) => deleteChild(id)));
-                setChildren((prev) => prev.filter((c) => !selectedIds.has(c.id)));
-                setSelectedIds(new Set());
+                if (!confirm(t('children.confirmBulkDelete', `${selectedIds.size} ta bolani o'chirmoqchimisiz?`))) return;
+                try {
+                  await Promise.all(Array.from(selectedIds).map((id) => deleteChild(id)));
+                  // onSnapshot listener will auto-remove deleted children
+                  setSelectedIds(new Set());
+                  toast.success(t('common.deletedMultiple', `${selectedIds.size} ta ma'lumot o'chirildi`));
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
+                }
               }} className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 border border-red-500/20 transition-colors">{t('common.delete', 'O\'chirish')}</button>
               <button onClick={() => setSelectedIds(new Set())} className="p-1 rounded-lg text-text-tertiary hover:text-text-primary transition-colors"><X className="w-4 h-4" /></button>
             </div>
           </motion.div>
         )}
 
-        {viewMode === 'list' && filteredChildren.length > 0 && (
+        {isLoading ? (
+          <div className="p-4 bg-surface-primary rounded-2xl border border-border-default mt-4"><TableSkeleton rows={8} /></div>
+        ) : viewMode === 'list' && filteredChildren.length > 0 && (
           <>
             {/* Mobile */}
             <div className="sm:hidden divide-y divide-border-subtle">
@@ -471,7 +487,7 @@ export default function ChildrenPage() {
           </div>
         )}
 
-        {filteredChildren.length === 0 && (
+        {!isLoading && filteredChildren.length === 0 && (
           <EmptyState icon={<UsersIcon className="w-6 h-6 text-text-tertiary" />} title={t('children.notFoundTitle', 'Bolalar topilmadi')} description={filters.search || activeFilterCount > 0 ? t('children.notFoundDescFilter', 'Qidiruv yoki filtrlarni o\'zgartirib ko\'ring.') : t('children.notFoundDescNew', '"Bola qo\'shish" tugmasi orqali birinchi bolani ro\'yxatga oling.')}
             action={filters.search || activeFilterCount > 0 ? <button onClick={clearFilters} className="px-4 py-2 rounded-xl border border-border-default text-sm font-medium text-text-secondary hover:bg-surface-secondary transition-colors">{t('common.clearFilters', 'Filtrlarni tozalash')}</button> : <button onClick={() => { setEditChild(null); setShowAddModal(true); }} className="px-4 py-2 rounded-xl bg-navy-900 text-white text-sm font-semibold hover:bg-navy-800 transition-colors"><Plus className="w-4 h-4 inline mr-1.5" />{t('children.registerFirst', 'Birinchi bolani ro\'yxatga olish')}</button>}
           />

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
 import {
@@ -13,18 +13,19 @@ import {
 import {
   categoryConfig,
   getCategorySummaries, paymentMethodLabels,
-} from '@/data/financesData';
+} from '@/data/seeds/financesData';
 import AddTransactionModal, { type TransactionFormData } from '@/components/finances/AddTransactionModal';
 import Pagination from '@/components/ui/Pagination';
 import EmptyState from '@/components/ui/EmptyState';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import type {
   Child,
   ChildPayment,
   Employee,
   FinanceTransaction, FinanceFilters, FinanceSortConfig, FinanceSortField,
 } from '@/types';
-import { createTransaction, subscribeChildren, subscribeEmployees, subscribeTransactions, updateChild, updateEmployee } from '@/services/firestore';
+import { createTransaction, deleteTransaction, subscribeChildren, subscribeEmployees, subscribeTransactions, updateChild, updateEmployee } from '@/services/firestore';
 import { downloadCsv } from '@/utils/csv';
 import { formatDateDisplay } from '@/utils/date';
 
@@ -153,7 +154,6 @@ export default function FinancesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [contextMenu, setContextMenu] = useState<string | null>(null);
-  const [activeChart, setActiveChart] = useState<'area' | 'bar'>('area');
   const [filters, setFilters] = useState<FinanceFilters>({
     search: '', type: '', category: '', status: '', dateRange: 'all', paymentMethod: '',
   });
@@ -236,22 +236,23 @@ export default function FinancesPage() {
       : (data.employeeName || undefined);
 
     try {
-      const payload: Omit<FinanceTransaction, 'id'> = {
+      const payload: any = {
         type: data.type,
         category: data.category as FinanceTransaction['category'],
         description: data.description,
         amount,
         date: data.date,
-        status: 'completed',
-        childId: selectedChild?.id,
-        childName: resolvedChildName,
-        employeeId: selectedEmployee?.id,
-        employeeName: resolvedEmployeeName,
+        status: data.status,
         paymentMethod: data.paymentMethod,
-        receiptNumber: data.receiptNumber || undefined,
-        notes: data.notes || undefined,
       };
-      const created = await createTransaction(payload);
+
+      if (selectedChild?.id) payload.childId = selectedChild.id;
+      if (resolvedChildName) payload.childName = resolvedChildName;
+      if (selectedEmployee?.id) payload.employeeId = selectedEmployee.id;
+      if (resolvedEmployeeName) payload.employeeName = resolvedEmployeeName;
+      if (data.receiptNumber) payload.receiptNumber = data.receiptNumber;
+
+      await createTransaction(payload as Omit<FinanceTransaction, 'id'>);
 
       if (shouldLinkChild && selectedChild && amount > 0) {
         const month = data.date.slice(0, 7);
@@ -301,18 +302,12 @@ export default function FinancesPage() {
         });
       }
 
-      setTransactions((prev) => {
-        const next = [{ ...payload, id: created.id }, ...prev];
-        const seen = new Set<string>();
-        return next.filter((item) => {
-          if (seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        });
-      });
-      setShowAddModal(false);
+      // onSnapshot listener (subscribeTransactions) will automatically
+      // update the transactions state when Firestore confirms the write.
+      // No need for manual setTransactions — it was causing a race condition.
+      toast.success(t('common.saved', "Saqlandi"));
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Tranzaksiya saqlashda xatolik");
+      toast.error(error instanceof Error ? error.message : "Tranzaksiya saqlashda xatolik");
     }
   };
 
@@ -418,43 +413,9 @@ export default function FinancesPage() {
               <h3 className="text-sm sm:text-base font-semibold text-text-primary">{t('finances.charts.incomeExpense', 'Daromad va Xarajat')}</h3>
               <p className="text-xs text-text-tertiary mt-0.5">{t('finances.charts.last10Months', "So'nggi 10 oy")}</p>
             </div>
-            <div className="flex items-center border border-border-default rounded-xl overflow-hidden">
-              <button
-                onClick={() => setActiveChart('area')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${activeChart === 'area' ? 'bg-navy-900 text-white' : 'text-text-tertiary hover:text-text-primary'}`}
-              >
-                {t('finances.chartTypes.line')}
-              </button>
-              <button
-                onClick={() => setActiveChart('bar')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${activeChart === 'bar' ? 'bg-navy-900 text-white' : 'text-text-tertiary hover:text-text-primary'}`}
-              >
-                {t('finances.chartTypes.bar')}
-              </button>
-            </div>
           </div>
           <div className="h-[260px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              {activeChart === 'area' ? (
-                <AreaChart data={chartMonthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="monthLabel" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => formatAmount(v)} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area type="monotone" dataKey="income" name="income" stroke="#10b981" strokeWidth={2.5} fill="url(#incomeGrad)" dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#10b981' }} />
-                  <Area type="monotone" dataKey="expense" name="expense" stroke="#ef4444" strokeWidth={2.5} fill="url(#expenseGrad)" dot={{ r: 3, fill: '#ef4444', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#ef4444' }} />
-                </AreaChart>
-              ) : (
                 <BarChart data={chartMonthlyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis dataKey="monthLabel" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
@@ -463,7 +424,6 @@ export default function FinancesPage() {
                   <Bar dataKey="income" name="income" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} />
                   <Bar dataKey="expense" name="expense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={16} />
                 </BarChart>
-              )}
             </ResponsiveContainer>
           </div>
           {/* Legend */}
@@ -495,7 +455,7 @@ export default function FinancesPage() {
               <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">{t('finances.types.income')}</span>
             </div>
             <div className="space-y-2">
-              {incomeSummaries.slice(0, 4).map(cat => (
+              {incomeSummaries.slice(0, 4).map((cat: any) => (
                 <div key={cat.category} className="group">
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-text-secondary flex items-center gap-1.5">
@@ -518,7 +478,7 @@ export default function FinancesPage() {
               <span className="text-xs font-semibold text-red-600 uppercase tracking-wider">{t('finances.types.expense')}</span>
             </div>
             <div className="space-y-2">
-              {expenseSummaries.slice(0, 5).map(cat => (
+              {expenseSummaries.slice(0, 5).map((cat: any) => (
                 <div key={cat.category} className="group">
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-text-secondary flex items-center gap-1.5">
@@ -811,6 +771,22 @@ export default function FinancesPage() {
                             </button>
                             <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
                               <AlertCircle className="w-3.5 h-3.5" /> {t('finances.actions.reportIssue', 'Muammoni xabar qilish')}
+                            </button>
+                            <div className="border-t border-border-subtle my-1" />
+                            <button
+                              onClick={async () => {
+                                if (!confirm(t('finances.confirmDelete', "Haqiqatan ham bu tranzaksiyani o'chirmoqchimisiz?"))) return;
+                                try {
+                                  await deleteTransaction(txn.id);
+                                  toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+                                  setContextMenu(null);
+                                } catch (error) {
+                                  toast.error(error instanceof Error ? error.message : "Xatolik yuz berdi");
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                            >
+                              <Ban className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
                             </button>
                           </div>
                         )}

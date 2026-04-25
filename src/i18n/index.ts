@@ -4,7 +4,8 @@ import { uz } from './locales/uz';
 import { ru } from './locales/ru';
 
 // Local storange dan o'qish (agar ilojisi bo'lsa)
-const savedLanguage = localStorage.getItem('i18nextLng') || 'uz';
+const savedLanguage = localStorage.getItem('i18nextLng');
+const initialLanguage = savedLanguage === 'ru' || savedLanguage === 'uz' ? savedLanguage : 'uz';
 
 i18n
   .use(initReactI18next)
@@ -13,7 +14,7 @@ i18n
       uz,
       ru,
     },
-    lng: savedLanguage, // Boshlang'ich til
+    lng: initialLanguage, // Boshlang'ich til
     fallbackLng: 'uz',
     interpolation: {
       escapeValue: false, // React o'zi XSS himoyasiga ega

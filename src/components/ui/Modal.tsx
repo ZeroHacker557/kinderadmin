@@ -8,6 +8,7 @@ interface ModalProps {
   title: string;
   subtitle?: string;
   children: ReactNode;
+  footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showClose?: boolean;
 }
@@ -26,6 +27,7 @@ export default function Modal({
   title,
   subtitle,
   children,
+  footer,
   size = 'lg',
   showClose = true,
 }: ModalProps) {
@@ -64,7 +66,7 @@ export default function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className={`relative w-full ${sizeClasses[size]} bg-surface-primary sm:rounded-2xl shadow-2xl shadow-black/10 max-h-screen sm:max-h-[90vh] flex flex-col min-h-screen sm:min-h-0`}
+            className={`relative w-full ${sizeClasses[size]} bg-surface-primary sm:rounded-2xl shadow-2xl shadow-black/10 h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border-default flex-shrink-0">
@@ -84,9 +86,16 @@ export default function Modal({
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
               {children}
             </div>
+
+            {/* Footer (optional) */}
+            {footer ? (
+              <div className="flex-shrink-0">
+                {footer}
+              </div>
+            ) : null}
           </motion.div>
         </div>
       )}

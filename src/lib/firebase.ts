@@ -1,16 +1,18 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCYUITlJf5SmNjmtitoc6TWekBo8Bez6ik',
-  authDomain: 'kinderadmin-95191.firebaseapp.com',
-  projectId: 'kinderadmin-95191',
-  storageBucket: 'kinderadmin-95191.firebasestorage.app',
-  messagingSenderId: '925802860610',
-  appId: '1:925802860610:web:fa703c77ac3032f2879ddb',
-  measurementId: 'G-P4NLFY5P6C',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 export const app = initializeApp(firebaseConfig);
-
+export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
