@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-primary">
-        <Skeleton type="circle" className="w-16 h-16" />
+        <Spinner size="xl" className="text-sky-500" />
       </div>
     );
   }

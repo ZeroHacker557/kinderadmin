@@ -719,7 +719,7 @@ export default function ParentsPage(): JSX.Element {
           className="relative z-10 rounded-2xl border border-border-default bg-surface-primary p-12"
         >
           <EmptyState
-            icon={Users}
+            icon={<Users className="w-6 h-6 text-text-tertiary" />}
             title={t("parents.empty.title", { defaultValue: "No parents found" })}
             description={t("parents.empty.description", {
               defaultValue:

@@ -14,11 +14,16 @@ import HelpPage from '@/pages/HelpPage';
 import ParentsPage from '@/pages/ParentsPage';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
+import { Spinner } from '@/components/ui/Spinner';
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-text-tertiary">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-primary">
+        <Spinner size="xl" className="text-sky-500" />
+      </div>
+    );
   }
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
