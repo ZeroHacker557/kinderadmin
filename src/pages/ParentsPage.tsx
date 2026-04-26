@@ -561,10 +561,10 @@ export default function ParentsPage(): JSX.Element {
               </span>
               {t("parents.eyebrow", { defaultValue: "Family Directory" })}
             </span>
-            <h1 className="mt-2 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent dark:from-white dark:via-slate-200 dark:to-white sm:text-5xl">
+            <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-text-primary sm:text-5xl">
               {t("parents.title", { defaultValue: "Parents" })}
             </h1>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-text-secondary">
               {t("parents.subtitle", {
                 defaultValue:
                   "Review parent contacts, linked children, and payment health from one consolidated directory.",
@@ -603,18 +603,18 @@ export default function ParentsPage(): JSX.Element {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.4 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/60 p-6 shadow-xl shadow-slate-200/40 backdrop-blur-xl transition-all dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-none"
+              className="group relative overflow-hidden rounded-2xl border border-border-default bg-surface-primary p-6 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/0 opacity-0 transition-opacity group-hover:opacity-100 dark:from-white/5" />
               <div className="relative flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{item.title}</p>
+                  <p className="text-sm font-medium text-text-secondary">{item.title}</p>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <p className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    <p className="text-4xl font-extrabold tracking-tight text-text-primary">
                       {item.value}
                     </p>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{item.subtitle}</p>
+                  <p className="mt-2 text-xs text-text-tertiary">{item.subtitle}</p>
                 </div>
                 <div className={`rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-110 group-hover:rotate-3 ${item.iconClassName}`}>
                   <Icon className="h-6 w-6" />
@@ -630,7 +630,7 @@ export default function ParentsPage(): JSX.Element {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
-        className="relative z-10 rounded-3xl border border-white/60 bg-white/60 p-5 shadow-xl shadow-slate-200/40 backdrop-blur-xl sm:p-6 dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-none"
+        className="relative z-10 rounded-2xl border border-border-default bg-surface-primary p-5 sm:p-6"
       >
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.75fr)_minmax(0,0.75fr)]">
           <div className="flex flex-col justify-end gap-1.5">
@@ -642,7 +642,7 @@ export default function ParentsPage(): JSX.Element {
                 placeholder={t("parents.searchPlaceholder", {
                   defaultValue: "Search by parent name, phone, or child name...",
                 })}
-                className="h-12 w-full rounded-2xl border-0 bg-white/80 pl-12 pr-4 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200/60 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-sky-500 dark:bg-slate-900/50 dark:text-white dark:ring-slate-700/50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900 dark:focus:ring-sky-500"
+                className="h-12 w-full rounded-xl border border-border-default bg-surface-secondary pl-12 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-sky-500/40 transition-all"
               />
             </label>
           </div>
@@ -654,7 +654,7 @@ export default function ParentsPage(): JSX.Element {
             <select
               value={relationFilter}
               onChange={(event) => setRelationFilter(event.target.value as RelationFilter)}
-              className="h-12 rounded-2xl border-0 bg-white/80 px-4 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200/60 transition-all focus:bg-white focus:ring-2 focus:ring-inset focus:ring-sky-500 dark:bg-slate-900/50 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-900 dark:focus:ring-sky-500"
+              className="h-12 rounded-xl border border-border-default bg-surface-secondary px-4 text-sm font-medium text-text-secondary focus:outline-none focus:ring-2 focus:ring-sky-500/40 transition-all"
             >
               <option value="all">
                 {t("parents.filters.allRelations", { defaultValue: "All relations" })}
@@ -674,7 +674,7 @@ export default function ParentsPage(): JSX.Element {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as PaymentSummaryFilter)}
-              className="h-12 rounded-2xl border-0 bg-white/80 px-4 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200/60 transition-all focus:bg-white focus:ring-2 focus:ring-inset focus:ring-sky-500 dark:bg-slate-900/50 dark:text-slate-200 dark:ring-slate-700/50 dark:focus:bg-slate-900 dark:focus:ring-sky-500"
+              className="h-12 rounded-xl border border-border-default bg-surface-secondary px-4 text-sm font-medium text-text-secondary focus:outline-none focus:ring-2 focus:ring-sky-500/40 transition-all"
             >
               <option value="all">
                 {t("parents.filters.allStatuses", { defaultValue: "All statuses" })}
@@ -687,8 +687,8 @@ export default function ParentsPage(): JSX.Element {
           </label>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5 dark:border-slate-700/50">
-          <span className="inline-flex items-center gap-2 rounded-xl bg-slate-100/80 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:bg-slate-700/50 dark:text-slate-300">
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border-subtle pt-5">
+          <span className="inline-flex items-center gap-2 rounded-xl bg-surface-secondary px-3 py-1.5 text-xs font-semibold text-text-secondary">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
             {t("parents.meta.showing", { defaultValue: "Showing" })}: {filteredRows.length}
           </span>
@@ -705,7 +705,7 @@ export default function ParentsPage(): JSX.Element {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-40 animate-pulse rounded-3xl border border-white/60 bg-white/40 shadow-xl shadow-slate-200/20 backdrop-blur-xl dark:border-slate-700/30 dark:bg-slate-800/40"
+              className="h-40 animate-pulse rounded-2xl border border-border-default bg-surface-primary"
             />
           ))}
         </section>
@@ -713,7 +713,7 @@ export default function ParentsPage(): JSX.Element {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 rounded-3xl border border-white/60 bg-white/60 p-12 shadow-xl shadow-slate-200/40 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/50"
+          className="relative z-10 rounded-2xl border border-border-default bg-surface-primary p-12"
         >
           <EmptyState
             icon={Users}
@@ -731,12 +731,12 @@ export default function ParentsPage(): JSX.Element {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
-            className="relative z-10 hidden overflow-hidden rounded-3xl border border-white/60 bg-white/60 shadow-xl shadow-slate-200/40 backdrop-blur-xl lg:block dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-none"
+            className="relative z-10 hidden overflow-hidden rounded-2xl border border-border-default bg-surface-primary lg:block"
           >
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200/60 dark:divide-slate-700/50">
-                <thead className="bg-slate-50/50 backdrop-blur-sm dark:bg-slate-900/20">
-                  <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <table className="min-w-full divide-y divide-border-subtle">
+                <thead className="bg-surface-secondary">
+                  <tr className="text-left text-xs font-bold uppercase tracking-wider text-text-tertiary">
                     <th className="px-6 py-5">{t("parents.table.parent", { defaultValue: "Parent" })}</th>
                     <th className="px-6 py-5">{t("parents.table.contact", { defaultValue: "Contact" })}</th>
                     <th className="px-6 py-5">{t("parents.table.relation", { defaultValue: "Relation" })}</th>
@@ -745,17 +745,17 @@ export default function ParentsPage(): JSX.Element {
                     <th className="px-6 py-5">{t("parents.table.lastPayment", { defaultValue: "Last payment month" })}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/60 bg-transparent dark:divide-slate-700/50">
+                <tbody className="divide-y divide-border-subtle bg-transparent">
                   {paginatedRows.map((row) => (
-                    <tr key={row.id} className="group align-top transition-colors hover:bg-white/80 dark:hover:bg-slate-800/80">
+                    <tr key={row.id} className="group align-top transition-colors hover:bg-surface-secondary/50">
                       <td className="px-6 py-5">
                         <div className="flex items-start gap-4">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 shadow-sm ring-1 ring-sky-200/50 transition-transform group-hover:scale-110 dark:from-sky-500/20 dark:to-sky-400/10 dark:text-sky-400 dark:ring-sky-500/30">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 ring-1 ring-sky-200 transition-transform group-hover:scale-110 dark:bg-sky-500/20 dark:text-sky-400 dark:ring-sky-500/30">
                             <UserRound className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 transition-colors group-hover:text-sky-700 dark:text-white dark:group-hover:text-sky-400">{row.fullName}</p>
-                            <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+                            <p className="font-bold text-text-primary transition-colors group-hover:text-sky-600">{row.fullName}</p>
+                            <p className="mt-1 text-sm font-medium text-text-tertiary">
                               {row.childrenCount}{" "}
                               {t("parents.common.children", { defaultValue: "children" })}
                             </p>
@@ -764,16 +764,16 @@ export default function ParentsPage(): JSX.Element {
                       </td>
 
                       <td className="px-6 py-5">
-                        <div className="space-y-2.5 text-sm text-slate-600 dark:text-slate-300">
+                        <div className="space-y-2.5 text-sm text-text-secondary">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                              <Phone className="h-3 w-3 text-slate-500" />
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                              <Phone className="h-3 w-3 text-slate-500 dark:text-slate-400" />
                             </div>
                             <span className="font-medium">{row.phone}</span>
                           </div>
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                              <Mail className="h-3 w-3 text-slate-500" />
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
+                              <Mail className="h-3 w-3 text-slate-500 dark:text-slate-400" />
                             </div>
                             <span className="break-all font-medium">{row.email}</span>
                           </div>
@@ -781,7 +781,7 @@ export default function ParentsPage(): JSX.Element {
                       </td>
 
                       <td className="px-6 py-5">
-                        <span className="inline-flex items-center rounded-xl bg-slate-100/80 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm ring-1 ring-inset ring-slate-200/50 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                        <span className="inline-flex items-center rounded-xl bg-surface-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-text-secondary ring-1 ring-inset ring-border-default">
                           {row.relationSummary || "—"}
                         </span>
                       </td>
@@ -791,11 +791,11 @@ export default function ParentsPage(): JSX.Element {
                           {row.childChips.map((child) => (
                             <div
                               key={child.childId}
-                              className="inline-flex items-center rounded-xl border border-slate-200/60 bg-white/50 px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-slate-300"
+                              className="inline-flex items-center rounded-xl border border-border-default bg-surface-secondary px-2.5 py-1 text-xs font-medium text-text-secondary"
                             >
                               <span className="font-bold">{child.childName}</span>
-                              <span className="mx-1.5 text-slate-300 dark:text-slate-600">•</span>
-                              <span className="text-slate-500 dark:text-slate-400">{child.groupName}</span>
+                              <span className="mx-1.5 text-text-tertiary">•</span>
+                              <span className="text-text-tertiary">{child.groupName}</span>
                             </div>
                           ))}
                         </div>
@@ -804,11 +804,11 @@ export default function ParentsPage(): JSX.Element {
                       <td className="px-6 py-5">
                         <div className="space-y-3">
                           <span
-                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold uppercase tracking-wider shadow-sm ring-1 ring-inset ${
-                              row.summaryStatus === "paid" ? "bg-emerald-50 text-emerald-700 ring-emerald-200/50 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20" :
-                              row.summaryStatus === "partial" ? "bg-amber-50 text-amber-700 ring-amber-200/50 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20" :
-                              row.summaryStatus === "overdue" ? "bg-rose-50 text-rose-700 ring-rose-200/50 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20" :
-                              "bg-slate-50 text-slate-700 ring-slate-200/50 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold uppercase tracking-wider ring-1 ring-inset ${
+                              row.summaryStatus === "paid" ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20" :
+                              row.summaryStatus === "partial" ? "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20" :
+                              row.summaryStatus === "overdue" ? "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20" :
+                              "bg-surface-secondary text-text-secondary ring-border-default dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
                             }`}
                           >
                             <span className={`h-1.5 w-1.5 rounded-full ${
@@ -821,24 +821,24 @@ export default function ParentsPage(): JSX.Element {
                           </span>
 
                           <div className="flex flex-wrap gap-1.5 text-[11px] font-bold uppercase tracking-wider">
-                            <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                              <span className="text-emerald-900/50 dark:text-emerald-400/50">{t("parents.counts.paid", { defaultValue: "Paid" })}:</span> {row.paidCount}
+                            <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400">
+                              <span className="opacity-60">{t("parents.counts.paid", { defaultValue: "Paid" })}:</span> {row.paidCount}
                             </span>
-                            <span className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                              <span className="text-amber-900/50 dark:text-amber-400/50">{t("parents.counts.partial", { defaultValue: "Partial" })}:</span> {row.partialCount}
+                            <span className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-500/10 dark:text-amber-400">
+                              <span className="opacity-60">{t("parents.counts.partial", { defaultValue: "Partial" })}:</span> {row.partialCount}
                             </span>
-                            <span className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                              <span className="text-slate-500/50 dark:text-slate-400/50">{t("parents.counts.pending", { defaultValue: "Pending" })}:</span> {row.pendingCount}
+                            <span className="flex items-center gap-1 rounded-lg bg-surface-secondary px-2 py-0.5 text-text-secondary ring-1 ring-inset ring-border-default dark:bg-slate-800 dark:text-slate-300">
+                              <span className="opacity-60">{t("parents.counts.pending", { defaultValue: "Pending" })}:</span> {row.pendingCount}
                             </span>
-                            <span className="flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-0.5 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">
-                              <span className="text-rose-900/50 dark:text-rose-400/50">{t("parents.counts.overdue", { defaultValue: "Overdue" })}:</span> {row.overdueCount}
+                            <span className="flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-0.5 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-400">
+                              <span className="opacity-60">{t("parents.counts.overdue", { defaultValue: "Overdue" })}:</span> {row.overdueCount}
                             </span>
                           </div>
                         </div>
                       </td>
 
                       <td className="px-6 py-5">
-                        <span className="inline-flex rounded-lg bg-slate-50 px-2.5 py-1 text-sm font-semibold text-slate-600 ring-1 ring-inset ring-slate-200/50 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                        <span className="inline-flex rounded-lg bg-surface-secondary px-2.5 py-1 text-sm font-semibold text-text-secondary ring-1 ring-inset ring-border-default dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
                           {formatMonthLabel(row.lastPaymentMonth, i18n.language)}
                         </span>
                       </td>
@@ -855,83 +855,96 @@ export default function ParentsPage(): JSX.Element {
               <motion.article
                 key={row.id}
                 whileHover={{ y: -4, scale: 1.01 }}
-                className="group overflow-hidden rounded-3xl border border-white/60 bg-white/60 p-5 shadow-xl shadow-slate-200/40 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-none"
+                className="group overflow-hidden rounded-2xl border border-border-default bg-surface-primary p-5 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 shadow-sm ring-1 ring-sky-200/50 dark:from-sky-500/20 dark:to-sky-400/10 dark:text-sky-400 dark:ring-sky-500/30">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 ring-1 ring-sky-200 dark:bg-sky-500/20 dark:text-sky-400 dark:ring-sky-500/30">
                       <UserRound className="h-6 w-6" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-white">{row.fullName}</h2>
-                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{row.relationSummary || "—"}</p>
+                      <h2 className="text-lg font-bold text-text-primary">{row.fullName}</h2>
+                      <p className="text-sm font-medium text-text-tertiary">{row.relationSummary || "—"}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 rounded-2xl bg-slate-50/80 p-4 shadow-inner ring-1 ring-inset ring-slate-200/50 dark:bg-slate-900/30 dark:ring-slate-700/50">
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                      <Phone className="h-3.5 w-3.5 text-slate-500" />
+                <div className="mt-5 grid gap-3 rounded-2xl bg-surface-secondary p-4 ring-1 ring-inset ring-border-subtle">
+                  <div className="flex items-center gap-3 text-sm text-text-secondary">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-primary ring-1 ring-border-default">
+                      <Phone className="h-3.5 w-3.5 text-text-tertiary" />
                     </div>
                     <span className="font-medium">{row.phone}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-700">
-                      <Mail className="h-3.5 w-3.5 text-slate-500" />
+                  <div className="flex items-center gap-3 text-sm text-text-secondary">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-primary ring-1 ring-border-default">
+                      <Mail className="h-3.5 w-3.5 text-text-tertiary" />
                     </div>
                     <span className="break-all font-medium">{row.email}</span>
                   </div>
                 </div>
 
                 <div className="mt-5">
-                  <p className="pl-1 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <p className="pl-1 text-xs font-bold uppercase tracking-wider text-text-tertiary">
                     {t("parents.card.children", { defaultValue: "Linked children" })}
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
-                    {row.childChips.map((child) => (
-                      <div
-                        key={child.childId}
-                        className="inline-flex items-center rounded-xl border border-slate-200/60 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700/50 dark:bg-slate-800/80 dark:text-slate-300"
-                      >
-                        <span className="font-bold">{child.childName}</span>
-                        <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-                        <span className="text-slate-500">{child.groupName}</span>
-                      </div>
-                    ))}
+                    {row.childChips.map((child, idx) => {
+                      const palettes = [
+                        { bg: "bg-sky-500 dark:bg-sky-500/20", name: "text-white dark:text-sky-300", sep: "text-sky-300 dark:text-sky-600", group: "text-sky-100 dark:text-sky-400" },
+                        { bg: "bg-violet-500 dark:bg-violet-500/20", name: "text-white dark:text-violet-300", sep: "text-violet-300 dark:text-violet-600", group: "text-violet-100 dark:text-violet-400" },
+                        { bg: "bg-teal-500 dark:bg-teal-500/20", name: "text-white dark:text-teal-300", sep: "text-teal-300 dark:text-teal-600", group: "text-teal-100 dark:text-teal-400" },
+                        { bg: "bg-indigo-500 dark:bg-indigo-500/20", name: "text-white dark:text-indigo-300", sep: "text-indigo-300 dark:text-indigo-600", group: "text-indigo-100 dark:text-indigo-400" },
+                      ];
+                      const p = palettes[idx % palettes.length];
+                      return (
+                        <div
+                          key={child.childId}
+                          className={`inline-flex items-center rounded-xl px-3 py-1.5 text-xs font-medium ${p.bg}`}
+                        >
+                          <span className={`font-bold ${p.name}`}>{child.childName}</span>
+                          <span className={`mx-2 ${p.sep}`}>•</span>
+                          <span className={p.group}>{child.groupName}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-2xl border border-emerald-100/50 bg-emerald-50/50 p-4 ring-1 ring-inset ring-emerald-200/50 transition-colors group-hover:bg-emerald-50 dark:border-emerald-800/30 dark:bg-emerald-900/10 dark:ring-emerald-800/50 dark:group-hover:bg-emerald-900/20">
-                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  {/* TO'LANGAN - emerald */}
+                  <div className="rounded-2xl bg-emerald-500 p-4 transition-colors hover:bg-emerald-600 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30">
+                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-100 dark:text-emerald-400">
                       {t("parents.counts.paid", { defaultValue: "Paid" })}
                     </p>
-                    <p className="mt-1.5 text-2xl font-black text-emerald-800 dark:text-emerald-300">{row.paidCount}</p>
+                    <p className="mt-1.5 text-2xl font-black text-white dark:text-emerald-300">{row.paidCount}</p>
                   </div>
-                  <div className="rounded-2xl border border-amber-100/50 bg-amber-50/50 p-4 ring-1 ring-inset ring-amber-200/50 transition-colors group-hover:bg-amber-50 dark:border-amber-800/30 dark:bg-amber-900/10 dark:ring-amber-800/50 dark:group-hover:bg-amber-900/20">
-                    <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  {/* QISMAN - amber */}
+                  <div className="rounded-2xl bg-amber-400 p-4 transition-colors hover:bg-amber-500 dark:bg-amber-500/20 dark:hover:bg-amber-500/30">
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-400">
                       {t("parents.counts.partial", { defaultValue: "Partial" })}
                     </p>
-                    <p className="mt-1.5 text-2xl font-black text-amber-800 dark:text-amber-300">{row.partialCount}</p>
+                    <p className="mt-1.5 text-2xl font-black text-amber-950 dark:text-amber-300">{row.partialCount}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200/50 bg-slate-50/50 p-4 ring-1 ring-inset ring-slate-200/50 transition-colors group-hover:bg-slate-50 dark:border-slate-700/50 dark:bg-slate-800/30 dark:ring-slate-700/50 dark:group-hover:bg-slate-800/50">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400">
+                  {/* KUTILMOQDA - sky/blue */}
+                  <div className="rounded-2xl bg-sky-500 p-4 transition-colors hover:bg-sky-600 dark:bg-sky-500/20 dark:hover:bg-sky-500/30">
+                    <p className="text-xs font-bold uppercase tracking-wider text-sky-100 dark:text-sky-400">
                       {t("parents.counts.pending", { defaultValue: "Pending" })}
                     </p>
-                    <p className="mt-1.5 text-2xl font-black text-slate-800 dark:text-slate-300">{row.pendingCount}</p>
+                    <p className="mt-1.5 text-2xl font-black text-white dark:text-sky-300">{row.pendingCount}</p>
                   </div>
-                  <div className="rounded-2xl border border-rose-100/50 bg-rose-50/50 p-4 ring-1 ring-inset ring-rose-200/50 transition-colors group-hover:bg-rose-50 dark:border-rose-800/30 dark:bg-rose-900/10 dark:ring-rose-800/50 dark:group-hover:bg-rose-900/20">
-                    <p className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                  {/* MUDDATI O'TGAN - rose */}
+                  <div className="rounded-2xl bg-rose-500 p-4 transition-colors hover:bg-rose-600 dark:bg-rose-500/20 dark:hover:bg-rose-500/30">
+                    <p className="text-xs font-bold uppercase tracking-wider text-rose-100 dark:text-rose-400">
                       {t("parents.counts.overdue", { defaultValue: "Overdue" })}
                     </p>
-                    <p className="mt-1.5 text-2xl font-black text-rose-800 dark:text-rose-300">{row.overdueCount}</p>
+                    <p className="mt-1.5 text-2xl font-black text-white dark:text-rose-300">{row.overdueCount}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between rounded-2xl bg-slate-800 px-4 py-3.5 text-sm text-slate-300 shadow-inner dark:bg-slate-900 dark:text-slate-400">
+                <div className="mt-5 flex items-center justify-between rounded-2xl bg-surface-secondary px-4 py-3.5 text-sm text-text-secondary">
                   <span className="font-medium">{t("parents.card.lastPayment", { defaultValue: "Last payment" })}</span>
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-text-primary">
                     {formatMonthLabel(row.lastPaymentMonth, i18n.language)}
                   </span>
                 </div>
@@ -940,7 +953,7 @@ export default function ParentsPage(): JSX.Element {
           </section>
 
           {/* Pagination Section */}
-          <div className="relative z-10 rounded-3xl border border-white/60 bg-white/60 px-5 py-4 shadow-xl shadow-slate-200/40 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/50 dark:shadow-none">
+          <div className="relative z-10 rounded-2xl border border-border-default bg-surface-primary px-5 py-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 {t("parents.pagination.summary", {
@@ -968,18 +981,18 @@ export default function ParentsPage(): JSX.Element {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
-          className="relative z-10 overflow-hidden rounded-3xl border border-sky-200/50 bg-gradient-to-r from-sky-50/80 to-indigo-50/80 p-5 shadow-lg shadow-sky-100/50 backdrop-blur-xl sm:p-6 dark:border-sky-800/30 dark:from-sky-900/20 dark:to-indigo-900/20 dark:shadow-none"
+          className="relative z-10 overflow-hidden rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-indigo-50 p-5 sm:p-6 dark:border-sky-800/30 dark:from-sky-900/20 dark:to-indigo-900/20"
         >
           <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-sky-400/10 blur-2xl" />
           <div className="relative flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-sky-200/50 dark:bg-slate-800 dark:ring-sky-700/50">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-surface-primary shadow-sm ring-1 ring-sky-200 dark:bg-slate-800 dark:ring-sky-700/50">
               <span className="text-xl">💡</span>
             </div>
             <div>
-              <p className="text-base font-bold text-slate-800 dark:text-slate-200">
+              <p className="text-base font-bold text-text-primary">
                 {t("parents.insight.title", { defaultValue: "Directory insight" })}
               </p>
-              <p className="mt-1.5 text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400">
+              <p className="mt-1.5 text-sm font-medium leading-relaxed text-text-secondary">
                 {t("parents.insight.description", {
                   defaultValue:
                     "Overdue-linked parents: {{overdue}} • Multi-child family contacts: {{multiChild}} • Total linked children in directory: {{children}}",
