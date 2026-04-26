@@ -16,6 +16,7 @@ import Pagination from "@/components/ui/Pagination";
 import { subscribeChildren } from "@/services/firestore";
 import type { Child, ChildPayment, Parent, PaymentStatus } from "@/types";
 import { downloadCsv } from "@/utils/csv";
+import { useAuth } from "@/context/AuthContext";
 
 type RelationFilter = "all" | "mother" | "father" | "guardian";
 type PaymentSummaryFilter = "all" | PaymentStatus;
@@ -281,6 +282,7 @@ function deriveSummaryStatus(item: Pick<
 
 export default function ParentsPage(): JSX.Element {
   const { t, i18n } = useTranslation();
+  const { kindergartenId } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -289,13 +291,14 @@ export default function ParentsPage(): JSX.Element {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const unsubscribe = subscribeChildren((nextChildren: Child[]) => {
+    if (!kindergartenId) return;
+    const unsubscribe = subscribeChildren(kindergartenId, (nextChildren: Child[]) => {
       setChildren(nextChildren);
       setLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [kindergartenId]);
 
   useEffect(() => {
     setCurrentPage(1);

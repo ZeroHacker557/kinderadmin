@@ -22,9 +22,11 @@ import { subscribeAttendance, subscribeChildren, subscribeEmployees, subscribeTr
 import { downloadCsv } from '@/utils/csv';
 import { formatDateDisplay } from '@/utils/date';
 import { CardSkeleton } from '@/components/ui/Skeleton';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([]);
@@ -33,6 +35,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!kindergartenId) return;
     let checks = 0;
     const checkOff = () => {
       checks++;
@@ -42,13 +45,13 @@ export default function DashboardPage() {
     };
 
     const unsubs = [
-      subscribeChildren((d) => { setChildren(d); checkOff(); }),
-      subscribeEmployees((d) => { setEmployees(d); checkOff(); }),
-      subscribeTransactions((d) => { setTransactions(d); checkOff(); }),
-      subscribeAttendance(new Date().toISOString().slice(0, 10), (d: any) => { setAttendance(d); checkOff(); }),
+      subscribeChildren(kindergartenId, (d) => { setChildren(d); checkOff(); }),
+      subscribeEmployees(kindergartenId, (d) => { setEmployees(d); checkOff(); }),
+      subscribeTransactions(kindergartenId, (d) => { setTransactions(d); checkOff(); }),
+      subscribeAttendance(kindergartenId, new Date().toISOString().slice(0, 10), (d: any) => { setAttendance(d); checkOff(); }),
     ];
     return () => unsubs.forEach((fn) => fn());
-  }, []);
+  }, [kindergartenId]);
 
   const currentDate = new Date().toLocaleDateString(t('dashboard.locale', 'uz-UZ'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const currentMonth = new Date().toISOString().slice(0, 7);

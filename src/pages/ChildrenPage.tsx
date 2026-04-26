@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Plus, Filter, Download, LayoutGrid, List,
   ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal,
@@ -17,6 +17,7 @@ import { createChild, deleteChild, subscribeChildren, subscribeGroups, updateChi
 import type { GroupInfo } from '@/types';
 import { downloadCsv } from '@/utils/csv';
 import { TableSkeleton } from '@/components/ui/Skeleton';
+import { useAuth } from '@/context/AuthContext';
 
 function calculateAge(dob: string): number {
   const b = new Date(dob), n = new Date();
@@ -29,6 +30,7 @@ const ITEMS_PER_PAGE = 8;
 
 export default function ChildrenPage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
   const [groups, setGroups] = useState<GroupInfo[]>([]);
 
   const statusConfig = {
@@ -69,20 +71,21 @@ export default function ChildrenPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!kindergartenId) return;
     let refs = 0;
     const checkState = () => {
       refs++;
       if (refs >= 2) setIsLoading(false);
     };
 
-    const unsubscribeChildren = subscribeChildren((d) => { setChildren(d); checkState(); });
-    const unsubscribeGroups = subscribeGroups((d) => { setGroups(d); checkState(); });
+    const unsubscribeChildren = subscribeChildren(kindergartenId, (d) => { setChildren(d); checkState(); });
+    const unsubscribeGroups = subscribeGroups(kindergartenId, (d) => { setGroups(d); checkState(); });
 
     return () => {
       unsubscribeChildren();
       unsubscribeGroups();
     };
-  }, []);
+  }, [kindergartenId]);
 
   const activeFilterCount = [filters.group, filters.status, filters.gender, filters.paymentStatus].filter(Boolean).length;
   const totalChildrenCount = children.length;
@@ -241,11 +244,11 @@ export default function ChildrenPage() {
 
     try {
       if (editChild) {
-        await updateChild(normalizedChild);
+        await updateChild(kindergartenId!, normalizedChild);
         // onSnapshot listener will auto-update children state
         setSelectedChild(normalizedChild);
       } else {
-        const created = await createChild(stripIdFromEntity(normalizedChild));
+        const created = await createChild(kindergartenId!, stripIdFromEntity(normalizedChild));
         const createdChild = { ...normalizedChild, id: created.id };
         // onSnapshot listener will auto-add the new child to state
         setSelectedChild(createdChild);
@@ -268,7 +271,7 @@ export default function ChildrenPage() {
   const handleDelete = async (id: string) => {
     if (!confirm(t('children.confirmDelete', "Haqiqatan ham bu bolani o'chirmoqchimisiz?"))) return;
     try {
-      await deleteChild(id);
+      await deleteChild(kindergartenId!, id);
       // onSnapshot listener will auto-remove from state
       setContextMenu(null);
       if (selectedChild?.id === id) setShowDetail(false);
@@ -392,7 +395,7 @@ export default function ChildrenPage() {
               <button onClick={async () => {
                 if (!confirm(t('children.confirmBulkDelete', `${selectedIds.size} ta bolani o'chirmoqchimisiz?`))) return;
                 try {
-                  await Promise.all(Array.from(selectedIds).map((id) => deleteChild(id)));
+                  await Promise.all(Array.from(selectedIds).map((id) => deleteChild(kindergartenId!, id)));
                   // onSnapshot listener will auto-remove deleted children
                   setSelectedIds(new Set());
                   toast.success(t('common.deletedMultiple', `${selectedIds.size} ta ma'lumot o'chirildi`));
@@ -449,15 +452,23 @@ export default function ChildrenPage() {
                       <td className="px-2 py-3">{payStatus && <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${payStatus.bg} ${payStatus.text}`}>{payStatus.label}</span>}</td>
                       <td className="px-2 py-3 relative" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => setContextMenu(contextMenu === child.id ? null : child.id)} className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary opacity-0 group-hover:opacity-100 transition-all"><MoreHorizontal className="w-4 h-4" /></button>
-                        {contextMenu === child.id && (
-                          <div className="absolute right-2 top-full mt-1 w-48 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20">
-                            <button onClick={() => openDetail(child)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Eye className="w-3.5 h-3.5" /> {t('common.viewProfile', 'Profilni ko\'rish')}</button>
-                            <button onClick={() => handleEdit(child)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Edit className="w-3.5 h-3.5" /> {t('common.edit', 'Tahrirlash')}</button>
-                            <button className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {t('common.callParent', 'Ota-onaga qo\'ng\'iroq')}</button>
-                            <div className="border-t border-border-subtle my-1" />
-                            <button onClick={() => handleDelete(child.id)} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"><Trash2 className="w-3.5 h-3.5" /> {t('common.delete', 'O\'chirish')}</button>
-                          </div>
-                        )}
+                        <AnimatePresence>
+                          {contextMenu === child.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute right-2 top-full mt-1 w-48 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20 origin-top-right"
+                            >
+                              <button onClick={() => openDetail(child)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Eye className="w-3.5 h-3.5" /> {t('common.viewProfile', 'Profilni ko\'rish')}</button>
+                              <button onClick={() => handleEdit(child)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Edit className="w-3.5 h-3.5" /> {t('common.edit', 'Tahrirlash')}</button>
+                              <button className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {t('common.callParent', 'Ota-onaga qo\'ng\'iroq')}</button>
+                              <div className="border-t border-border-subtle my-1" />
+                              <button onClick={() => handleDelete(child.id)} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"><Trash2 className="w-3.5 h-3.5" /> {t('common.delete', 'O\'chirish')}</button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </td>
                     </motion.tr>
                   );

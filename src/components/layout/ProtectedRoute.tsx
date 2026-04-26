@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+  if (allowedRoles && userRole && userRole !== 'superadmin' && !allowedRoles.includes(userRole)) {
     return <Navigate to="/403" replace />;
   }
 

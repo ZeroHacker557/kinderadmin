@@ -5,8 +5,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  signInWithPopup,
-  GoogleAuthProvider,
   signOut as firebaseSignOut,
   setPersistence,
   browserLocalPersistence,
@@ -14,12 +12,12 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
-import type { AppUser, UserRole, LoginCredentials, AuthState } from '@/types';
+import type { AppUser, UserRole, LoginCredentials, AuthState, Kindergarten } from '@/types';
+import { kindergartenService } from '@/services/firestore';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
-  register: (payload: { name: string; email: string; password: string; rememberMe: boolean }) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  register: (payload: { firstName: string; lastName: string; kindergartenName: string; email: string; password: string; rememberMe: boolean }) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (actionOrRole: string) => boolean;
 }
@@ -30,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
   const [user, setUser] = useState<AppUser | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [kindergartenId, setKindergartenId] = useState<string | null>(null);
+  const [kindergarten, setKindergarten] = useState<Kindergarten | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!firebaseUser) {
         setUser(null);
         setUserRole(null);
+        setKindergartenId(null);
+        setKindergarten(null);
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
@@ -47,12 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         
-        let role: UserRole = 'admin'; // default role for testing if doc is absent
+        let role: UserRole = 'admin'; // default role for new users is admin of their own kg
+        let kgId: string;
         let appUser: AppUser;
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
           role = (userData.role as UserRole) || 'admin';
+          // If for some reason they don't have a kindergartenId, give them a unique one
+          kgId = userData.kindergartenId || `kg_${firebaseUser.uid}`;
           appUser = {
             uid: firebaseUser.uid,
             id: firebaseUser.uid,
@@ -60,10 +65,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: userData.displayName || firebaseUser.displayName || 'Admin',
             name: userData.displayName || firebaseUser.displayName || 'Admin',
             role,
+            kindergartenId: kgId,
             photoURL: userData.photoURL || firebaseUser.photoURL || undefined,
             createdAt: userData.createdAt
           };
+          
+          // If they didn't have one previously, save it to their user doc
+          if (!userData.kindergartenId) {
+            await setDoc(userDocRef, { kindergartenId: kgId }, { merge: true });
+          }
         } else {
+          // BRAND NEW USER - Give them their own unique kindergarten!
+          kgId = `kg_${firebaseUser.uid}`;
+          
           appUser = {
             uid: firebaseUser.uid,
             id: firebaseUser.uid,
@@ -71,17 +85,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             displayName: firebaseUser.displayName || 'Admin',
             name: firebaseUser.displayName || 'Admin',
             role,
+            kindergartenId: kgId,
             photoURL: firebaseUser.photoURL || undefined
           };
+
+          // Save the new user document
+          await setDoc(userDocRef, {
+            email: appUser.email,
+            displayName: appUser.displayName,
+            role: appUser.role,
+            kindergartenId: kgId,
+            photoURL: appUser.photoURL,
+            createdAt: new Date()
+          });
+
+          // Create their new private kindergarten document
+          await setDoc(doc(db, 'kindergartens', kgId), {
+            name: `${appUser.displayName} bog'chasi`,
+            plan: 'free',
+            maxChildren: 100,
+            isActive: true,
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        // Load kindergarten details
+        let kgData: Kindergarten | null = null;
+        try {
+          kgData = await kindergartenService.getById(kgId);
+        } catch (err) {
+          console.warn('Could not load kindergarten data:', err);
         }
 
         setUser(appUser);
         setUserRole(role);
+        setKindergartenId(kgId);
+        setKindergarten(kgData);
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Error fetching user profile:", error);
         setUser(null);
         setUserRole(null);
+        setKindergartenId(null);
+        setKindergarten(null);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -102,21 +148,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [auth]);
 
-  const register = useCallback(async (payload: { name: string; email: string; password: string; rememberMe: boolean }) => {
+  const register = useCallback(async (payload: { firstName: string; lastName: string; kindergartenName: string; email: string; password: string; rememberMe: boolean }) => {
     setIsLoading(true);
     try {
       await setPersistence(auth, payload.rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const userCredential = await createUserWithEmailAndPassword(auth, payload.email, payload.password);
-      if (payload.name.trim()) {
-        await updateProfile(userCredential.user, { displayName: payload.name.trim() });
+      
+      const fullName = `${payload.firstName.trim()} ${payload.lastName.trim()}`.trim();
+      if (fullName) {
+        await updateProfile(userCredential.user, { displayName: fullName });
       }
       
-      // Create user doc
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const uid = userCredential.user.uid;
+      const kgId = `kg_${uid}`;
+
+      // Create user doc with unique kindergartenId
+      await setDoc(doc(db, 'users', uid), {
         email: payload.email,
-        displayName: payload.name.trim(),
-        role: 'teacher', // new registrations are teachers by default
+        displayName: fullName,
+        role: 'admin', // The creator is the admin of their own kindergarten
+        kindergartenId: kgId,
         createdAt: new Date()
+      });
+
+      // Create their unique kindergarten doc
+      await setDoc(doc(db, 'kindergartens', kgId), {
+        name: payload.kindergartenName.trim() || `${fullName} bog'chasi`,
+        plan: 'free',
+        maxChildren: 100,
+        isActive: true,
+        createdAt: new Date().toISOString()
       });
     } catch (error) {
       setIsLoading(false);
@@ -124,16 +185,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [auth]);
 
-  const loginWithGoogle = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      setIsLoading(false);
-      throw error instanceof Error ? error : new Error('Google login failed');
-    }
-  }, [auth]);
 
   const logout = useCallback(() => {
     return firebaseSignOut(auth);
@@ -141,11 +192,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasPermission = (actionOrRole: string): boolean => {
     if (!userRole) return false;
+    if (userRole === 'superadmin') return true;
     if (userRole === 'admin') return true;
     
     if (actionOrRole === userRole) return true;
     
     const permissions: Record<UserRole, string[]> = {
+      superadmin: ['*'],
       admin: ['*'],
       teacher: ['view_children', 'edit_children', 'mark_attendance'],
       accountant: ['view_finances', 'edit_finances'],
@@ -156,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, isAuthenticated, isLoading, login, register, loginWithGoogle, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, userRole, kindergartenId, kindergarten, isAuthenticated, isLoading, login, register, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, UserCheck, Plus, MoreHorizontal,
   TrendingUp, ChevronRight, GraduationCap, Search, Trash2, Check,
@@ -10,6 +10,7 @@ import { toast } from 'react-hot-toast';
 import type { Child, Employee, GroupInfo } from '@/types';
 import { createGroup, deleteGroup, subscribeChildren, subscribeEmployees, subscribeGroups, updateEmployee, updateGroup } from '@/services/firestore';
 import { CardSkeleton } from '@/components/ui/Skeleton';
+import { useAuth } from '@/context/AuthContext';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -208,6 +209,7 @@ function AddGroupModal({
 
 export default function GroupsPage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
   const [groups, setGroups] = useState<GroupInfo[]>([]);
   const [children, setChildren] = useState<Child[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -220,6 +222,7 @@ export default function GroupsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!kindergartenId) return;
     let refs = 0;
     const checkState = () => {
       refs++;
@@ -227,12 +230,12 @@ export default function GroupsPage() {
     };
 
     const unsubs = [
-      subscribeGroups((d: GroupInfo[]) => { setGroups(d); checkState(); }),
-      subscribeChildren((d: Child[]) => { setChildren(d); checkState(); }),
-      subscribeEmployees((d: Employee[]) => { setEmployees(d); checkState(); }),
+      subscribeGroups(kindergartenId, (d: GroupInfo[]) => { setGroups(d); checkState(); }),
+      subscribeChildren(kindergartenId, (d: Child[]) => { setChildren(d); checkState(); }),
+      subscribeEmployees(kindergartenId, (d: Employee[]) => { setEmployees(d); checkState(); }),
     ];
     return () => unsubs.forEach((u) => u());
-  }, []);
+  }, [kindergartenId]);
 
   const groupsWithCounts = useMemo(
     () =>
@@ -279,7 +282,7 @@ export default function GroupsPage() {
   const totalCapacity = groupsWithCounts.reduce((sum, g) => sum + g.capacity, 0);
   const avgAttendance = Math.round(children.reduce((sum, c) => sum + c.attendanceRate, 0) / Math.max(children.length, 1));
   const handleCreateGroup = async (payload: Omit<GroupInfo, 'id'>, selectedStaffIds: string[]) => {
-    const created = await createGroup(payload);
+    const created = await createGroup(kindergartenId!, payload);
     const groupId = created.id;
     const groupName = payload.name;
 
@@ -287,7 +290,7 @@ export default function GroupsPage() {
       selectedStaffIds.map(async (employeeId) => {
         const employee = employees.find((e) => e.id === employeeId);
         if (!employee) return;
-        await updateEmployee({
+        await updateEmployee(kindergartenId!, {
           ...employee,
           assignedGroupId: groupId,
           assignedGroup: groupName,
@@ -300,7 +303,7 @@ export default function GroupsPage() {
 
   const handleUpdateGroup = async (payload: Omit<GroupInfo, 'id'>, selectedStaffIds: string[]) => {
     if (!editGroup) return;
-    await updateGroup({ ...payload, id: editGroup.id });
+    await updateGroup(kindergartenId!, { ...payload, id: editGroup.id });
 
     // Update staff assignments (best-effort)
     await Promise.all(
@@ -310,14 +313,14 @@ export default function GroupsPage() {
           employee.assignedGroupId === editGroup.id || employee.assignedGroup === editGroup.name;
 
         if (shouldBeAssigned && !isAssigned) {
-          await updateEmployee({
+          await updateEmployee(kindergartenId!, {
             ...employee,
             assignedGroupId: editGroup.id,
             assignedGroup: payload.name,
           });
         }
         if (!shouldBeAssigned && isAssigned) {
-          await updateEmployee({
+          await updateEmployee(kindergartenId!, {
             ...employee,
             assignedGroupId: undefined,
             assignedGroup: undefined,
@@ -423,7 +426,7 @@ export default function GroupsPage() {
                         : t('groups.confirmDelete', `"${group.name}" guruhini o'chirmoqchimisiz?`);
                       if (!confirm(message)) return;
                       try {
-                        await deleteGroup(group.id);
+                        await deleteGroup(kindergartenId!, group.id);
                         // onSnapshot listener will auto-remove from state
                         toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
                       } catch (error) {
@@ -434,24 +437,30 @@ export default function GroupsPage() {
                     <Trash2 className="w-4 h-4" />
                   </button>
 
-                  {groupMenuId === group.id && (
-                    <div
-                      className="absolute right-0 top-9 w-56 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-30"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGroupMenuId(null);
-                          setEditGroup(group as any);
-                          setShowEditModal(true);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
+                  <AnimatePresence>
+                    {groupMenuId === group.id && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-9 w-56 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-30 origin-top-right"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {t('common.edit', 'Tahrirlash')}
-                      </button>
-                    </div>
-                  )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGroupMenuId(null);
+                            setEditGroup(group as any);
+                            setShowEditModal(true);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
+                        >
+                          {t('common.edit', 'Tahrirlash')}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 

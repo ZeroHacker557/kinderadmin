@@ -2,13 +2,14 @@
 // KinderAdmin ERP — Core Type Definitions
 // ============================================
 
-export type UserRole = 'admin' | 'teacher' | 'accountant' | 'secretary';
+export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'accountant' | 'secretary';
 
 export interface AppUser {
   uid: string;
   email: string;
   displayName: string;
   role: UserRole;
+  kindergartenId: string;
   photoURL?: string;
   createdAt?: string;
   // Compatibility aliases
@@ -16,9 +17,24 @@ export interface AppUser {
   name: string;
 }
 
+export interface Kindergarten {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  logoURL?: string;
+  createdAt: any;
+  plan: 'free' | 'pro';
+  maxChildren: number;
+  isActive: boolean;
+}
+
 export interface AuthState {
   user: AppUser | null;
   userRole: UserRole | null;
+  kindergartenId: string | null;
+  kindergarten: Kindergarten | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }

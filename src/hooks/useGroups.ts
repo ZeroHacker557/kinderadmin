@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { groupsService } from '@/services/firestore';
+import { useKindergarten } from '@/hooks/useKindergarten';
 import type { GroupInfo } from '@/types';
 
 export function useGroups() {
+  const { kindergartenId } = useKindergarten();
   const [data, setData] = useState<GroupInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -11,7 +13,7 @@ export function useGroups() {
     setLoading(true);
     setError(null);
     try {
-      const unsubscribe = groupsService.getAll((groups) => {
+      const unsubscribe = groupsService.getAll(kindergartenId, (groups) => {
         setData(groups);
         setLoading(false);
       });
@@ -21,7 +23,7 @@ export function useGroups() {
       setLoading(false);
       return () => {};
     }
-  }, []);
+  }, [kindergartenId]);
 
   useEffect(() => {
     const unsub = fetch();

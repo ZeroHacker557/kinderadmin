@@ -17,6 +17,7 @@ import { app } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProfile, upsertUserProfile } from '@/services/firestore';
 import { seedAllData } from '@/data/seeds/seedFirestore';
+import { migrateToMultiTenant } from '@/utils/migrateToMultiTenant';
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [saved, setSaved] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   // Profile status
   const [profile, setProfile] = useState({
@@ -345,6 +347,26 @@ export default function SettingsPage() {
                       className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
                     >
                       {isSeeding ? 'Yuklanmoqda...' : "Boshlang'ich ma'lumotlarni yuklash (Seed Database)"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isMigrating}
+                      onClick={async () => {
+                        if (!confirm("Mavjud ma'lumotlarni multi-tenant strukturasiga ko'chirish. Rozimisiz?")) return;
+                        setIsMigrating(true);
+                        try {
+                          const result = await migrateToMultiTenant();
+                          alert(result.message);
+                          if (result.success) window.location.reload();
+                        } catch (e) {
+                          alert("Xatolik: " + (e as Error).message);
+                        } finally {
+                          setIsMigrating(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-amber-600 text-white rounded-xl text-sm font-semibold hover:bg-amber-700 disabled:opacity-50 ml-2"
+                    >
+                      {isMigrating ? 'Ko\'chirmoqda...' : 'Multi-tenant migratsiya'}
                     </button>
                   </div>
                 </div>

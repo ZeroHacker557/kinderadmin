@@ -121,6 +121,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   const roleLabels: Record<string, string> = {
+    superadmin: t('roles.superadmin', 'Super Admin'),
     admin: t('roles.admin', 'Administrator'),
     teacher: t('roles.teacher', "O'qituvchi"),
     accountant: t('roles.accountant', 'Buxgalter'),

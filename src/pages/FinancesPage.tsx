@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -28,6 +28,7 @@ import type {
 import { createTransaction, deleteTransaction, subscribeChildren, subscribeEmployees, subscribeTransactions, updateChild, updateEmployee } from '@/services/firestore';
 import { downloadCsv } from '@/utils/csv';
 import { formatDateDisplay } from '@/utils/date';
+import { useAuth } from '@/context/AuthContext';
 
 function formatAmount(amount: number): string {
   const abs = Math.abs(amount);
@@ -61,6 +62,7 @@ const employeeLinkedExpenseCategories = new Set(['salary']);
 
 export default function FinancesPage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
   const locale = t('common.locale', 'uz-UZ');
   const currency = t('common.currency', "so'm");
 
@@ -69,13 +71,14 @@ export default function FinancesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
+    if (!kindergartenId) return;
     const unsubs = [
-      subscribeTransactions(setTransactions),
-      subscribeChildren(setChildren),
-      subscribeEmployees(setEmployees),
+      subscribeTransactions(kindergartenId, setTransactions),
+      subscribeChildren(kindergartenId, setChildren),
+      subscribeEmployees(kindergartenId, setEmployees),
     ];
     return () => unsubs.forEach((u) => u());
-  }, []);
+  }, [kindergartenId]);
 
   const chartMonthlyData = useMemo(() => {
     const formatMonthLabel = (month: string) => {
@@ -252,7 +255,7 @@ export default function FinancesPage() {
       if (resolvedEmployeeName) payload.employeeName = resolvedEmployeeName;
       if (data.receiptNumber) payload.receiptNumber = data.receiptNumber;
 
-      await createTransaction(payload as Omit<FinanceTransaction, 'id'>);
+      await createTransaction(kindergartenId!, payload as Omit<FinanceTransaction, 'id'>);
 
       if (shouldLinkChild && selectedChild && amount > 0) {
         const month = data.date.slice(0, 7);
@@ -291,11 +294,11 @@ export default function FinancesPage() {
           ...selectedChild,
           payments: [...nextPayments].sort((a, b) => b.month.localeCompare(a.month)),
         };
-        await updateChild(updatedChild);
+        await updateChild(kindergartenId!, updatedChild);
       }
 
       if (shouldLinkEmployee && selectedEmployee && amount > 0) {
-        await updateEmployee({
+        await updateEmployee(kindergartenId!, {
           ...selectedEmployee,
           lastSalaryPaymentDate: data.date,
           lastSalaryPaymentAmount: amount,
@@ -761,35 +764,43 @@ export default function FinancesPage() {
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
-                        {contextMenu === txn.id && (
-                          <div className="absolute right-2 top-full mt-1 w-48 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20">
-                            <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                              <Eye className="w-3.5 h-3.5" /> {t('common.viewAll', "Batafsil ko'rish")}
-                            </button>
-                            <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                              <FileText className="w-3.5 h-3.5" /> {t('finances.actions.downloadReceipt', 'Kvitansiya yuklab olish')}
-                            </button>
-                            <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                              <AlertCircle className="w-3.5 h-3.5" /> {t('finances.actions.reportIssue', 'Muammoni xabar qilish')}
-                            </button>
-                            <div className="border-t border-border-subtle my-1" />
-                            <button
-                              onClick={async () => {
-                                if (!confirm(t('finances.confirmDelete', "Haqiqatan ham bu tranzaksiyani o'chirmoqchimisiz?"))) return;
-                                try {
-                                  await deleteTransaction(txn.id);
-                                  toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
-                                  setContextMenu(null);
-                                } catch (error) {
-                                  toast.error(error instanceof Error ? error.message : "Xatolik yuz berdi");
-                                }
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                        <AnimatePresence>
+                          {contextMenu === txn.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute right-2 top-full mt-1 w-48 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20 origin-top-right"
                             >
-                              <Ban className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
-                            </button>
-                          </div>
-                        )}
+                              <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                <Eye className="w-3.5 h-3.5" /> {t('common.viewAll', "Batafsil ko'rish")}
+                              </button>
+                              <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                <FileText className="w-3.5 h-3.5" /> {t('finances.actions.downloadReceipt', 'Kvitansiya yuklab olish')}
+                              </button>
+                              <button onClick={() => setContextMenu(null)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                <AlertCircle className="w-3.5 h-3.5" /> {t('finances.actions.reportIssue', 'Muammoni xabar qilish')}
+                              </button>
+                              <div className="border-t border-border-subtle my-1" />
+                              <button
+                                onClick={async () => {
+                                  if (!confirm(t('finances.confirmDelete', "Haqiqatan ham bu tranzaksiyani o'chirmoqchimisiz?"))) return;
+                                  try {
+                                    await deleteTransaction(kindergartenId!, txn.id);
+                                    toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+                                    setContextMenu(null);
+                                  } catch (error) {
+                                    toast.error(error instanceof Error ? error.message : "Xatolik yuz berdi");
+                                  }
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2"
+                              >
+                                <Ban className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </td>
                     </motion.tr>
                   );

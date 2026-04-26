@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { attendanceService } from '@/services/firestore';
+import { useKindergarten } from '@/hooks/useKindergarten';
 import type { AttendanceRecord } from '@/types';
 
 export function useAttendance(date: string) {
+  const { kindergartenId } = useKindergarten();
   const [data, setData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -11,7 +13,7 @@ export function useAttendance(date: string) {
     setLoading(true);
     setError(null);
     try {
-      const unsubscribe = attendanceService.getByDate(date, (records) => {
+      const unsubscribe = attendanceService.getByDate(kindergartenId, date, (records) => {
         setData(records);
         setLoading(false);
       });
@@ -21,7 +23,7 @@ export function useAttendance(date: string) {
       setLoading(false);
       return () => {};
     }
-  }, [date]);
+  }, [kindergartenId, date]);
 
   useEffect(() => {
     const unsub = fetch();

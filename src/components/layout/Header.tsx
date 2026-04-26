@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export default function Header({ isMobile }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, kindergarten } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -19,6 +19,12 @@ export default function Header({ isMobile }: HeaderProps) {
     <header className="h-16 flex items-center justify-between px-4 lg:px-8 bg-surface-primary border-b border-border-default z-30 shadow-sm">
       <div className="flex items-center gap-4 flex-1">
         {isMobile && <h1 className="font-bold text-xl text-primary">KinderAdmin</h1>}
+        {kindergarten && (
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-secondary/60 border border-border-subtle">
+            <span className="text-base">🏫</span>
+            <span className="text-sm font-semibold text-text-primary truncate max-w-[200px]">{kindergarten.name}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">

@@ -17,6 +17,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import Pagination from '@/components/ui/Pagination';
 import { downloadCsv } from '@/utils/csv';
 import { formatDateDisplay } from '@/utils/date';
+import { useAuth } from '@/context/AuthContext';
 
 type AttendanceStatus = 'present' | 'absent' | 'late';
 
@@ -24,6 +25,7 @@ const ITEMS_PER_PAGE = 12;
 
 export default function AttendancePage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
 
   const [children, setChildren] = useState<Child[]>([]);
   const [groups, setGroups] = useState<GroupInfo[]>([]);
@@ -48,9 +50,10 @@ export default function AttendancePage() {
   const [historyOpenMobile, setHistoryOpenMobile] = useState(false);
 
   useEffect(() => {
-    const unsubs = [subscribeChildren(setChildren), subscribeGroups(setGroups)];
+    if (!kindergartenId) return;
+    const unsubs = [subscribeChildren(kindergartenId, setChildren), subscribeGroups(kindergartenId, setGroups)];
     return () => unsubs.forEach((u) => u());
-  }, []);
+  }, [kindergartenId]);
 
   const selectedGroup = useMemo(
     () => groups.find((g) => g.id === selectedGroupId) ?? null,
@@ -65,17 +68,17 @@ export default function AttendancePage() {
       return;
     }
 
-    const unsubMeta = subscribeAttendanceDay(selectedGroupId, selectedDate, (meta: any) => {
+    const unsubMeta = subscribeAttendanceDay(kindergartenId!, selectedGroupId, selectedDate, (meta: any) => {
       setDayClosed(Boolean(meta?.closed));
     });
-    const unsubRecords = subscribeAttendanceByDate(selectedDate, (rows: AttendanceRecord[]) => {
+    const unsubRecords = subscribeAttendanceByDate(kindergartenId!, selectedDate, (rows: AttendanceRecord[]) => {
       setDayRecords(rows.filter((r: AttendanceRecord) => r.groupId === selectedGroupId));
     });
     return () => {
       unsubMeta();
       unsubRecords();
     };
-  }, [selectedGroupId, selectedDate]);
+  }, [kindergartenId, selectedGroupId, selectedDate]);
 
   useEffect(() => {
     // history for this group and month (simple)
@@ -92,11 +95,11 @@ export default function AttendancePage() {
       .toISOString()
       .slice(0, 10);
 
-    const unsub = subscribeAttendanceByDateRange(monthStart, monthEnd, (rows: AttendanceRecord[]) => {
+    const unsub = subscribeAttendanceByDateRange(kindergartenId!, monthStart, monthEnd, (rows: AttendanceRecord[]) => {
       setHistory(rows.filter((r: AttendanceRecord) => r.groupId === selectedGroupId));
     });
     return () => unsub();
-  }, [selectedGroupId, selectedDate]);
+  }, [kindergartenId, selectedGroupId, selectedDate]);
 
   const childrenInGroup = useMemo(
     () =>
@@ -135,7 +138,7 @@ export default function AttendancePage() {
     setIsReopening(true);
     setSaveError(null);
     try {
-      await setAttendanceDayClosed({
+      await setAttendanceDayClosed(kindergartenId!, {
         groupId: selectedGroup.id,
         groupName: selectedGroup.name,
         date: selectedDate,
@@ -156,7 +159,7 @@ export default function AttendancePage() {
     setIsSaving(true);
     setSaveError(null);
     try {
-      await saveAttendanceForDay({
+      await saveAttendanceForDay(kindergartenId!, {
         groupId: selectedGroup.id,
         groupName: selectedGroup.name,
         date: selectedDate,

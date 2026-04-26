@@ -5,10 +5,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
-  const { login, register, loginWithGoogle, isLoading } = useAuth();
+  const { login, register, isLoading } = useAuth();
   const { t } = useTranslation();
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [kindergartenName, setKindergartenName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,21 +22,12 @@ export default function LoginPage() {
     setError(null);
     try {
       if (mode === 'register') {
-        await register({ name, email, password, rememberMe });
+        await register({ firstName, lastName, kindergartenName, email, password, rememberMe });
       } else {
         await login({ email, password, rememberMe });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('login.form.defaultError'));
-    }
-  };
-
-  const handleGoogle = async () => {
-    setError(null);
-    try {
-      await loginWithGoogle();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('login.form.googleError', 'Google orqali kirishda xatolik'));
     }
   };
 
@@ -154,23 +147,61 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="mt-6 sm:mt-8 space-y-4 sm:space-y-5">
               {mode === 'register' && (
-                <div className="space-y-1.5">
-                  <label htmlFor="register-name" className="block text-sm font-medium text-text-primary">
-                    {t('login.form.name', 'Ism')}
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
-                    <input
-                      id="register-name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={t('login.form.namePlaceholder', 'Ismingiz')}
-                      required={mode === 'register'}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border-default bg-surface-secondary/50 text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200"
-                    />
+                <>
+                  <div className="flex gap-3">
+                    <div className="space-y-1.5 flex-1">
+                      <label htmlFor="register-firstName" className="block text-sm font-medium text-text-primary">
+                        Ism
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
+                        <input
+                          id="register-firstName"
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Ismingiz"
+                          required={mode === 'register'}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-border-default bg-surface-secondary/50 text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 flex-1">
+                      <label htmlFor="register-lastName" className="block text-sm font-medium text-text-primary">
+                        Familiya
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
+                        <input
+                          id="register-lastName"
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Familiyangiz"
+                          required={mode === 'register'}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-border-default bg-surface-secondary/50 text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="register-kg-name" className="block text-sm font-medium text-text-primary">
+                      Bog'cha nomi
+                    </label>
+                    <div className="relative">
+                      <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
+                      <input
+                        id="register-kg-name"
+                        type="text"
+                        value={kindergartenName}
+                        onChange={(e) => setKindergartenName(e.target.value)}
+                        placeholder="Misol: Baxtli Bolajon MTM"
+                        required={mode === 'register'}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-border-default bg-surface-secondary/50 text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-navy-900/10 focus:border-navy-900/30 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
               <div className="space-y-1.5">
                 <label htmlFor="login-email" className="block text-sm font-medium text-text-primary">
@@ -242,14 +273,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleGoogle}
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl border border-border-default text-text-primary font-semibold text-sm hover:bg-surface-secondary transition-colors"
-              >
-                {t('login.form.googleLogin', 'Google orqali kirish')}
-              </button>
+
 
               <motion.button
                 type="submit"

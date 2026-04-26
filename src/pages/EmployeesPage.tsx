@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Plus, Filter, Download, LayoutGrid, List,
   ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal,
@@ -17,6 +17,7 @@ import { toast } from 'react-hot-toast';
 import { createDepartment, createEmployee, deleteDepartment, deleteEmployee, subscribeDepartments, subscribeEmployees, updateEmployee } from '@/services/firestore';
 import { downloadCsv } from '@/utils/csv';
 import { TableSkeleton } from '@/components/ui/Skeleton';
+import { useAuth } from '@/context/AuthContext';
 
 function formatSalary(amount: number): string {
   if (amount >= 1000000) {
@@ -51,6 +52,7 @@ const FIXED_DEPARTMENTS: Department[] = [
 
 export default function EmployeesPage() {
   const { t } = useTranslation();
+  const { kindergartenId } = useAuth();
   const locale = t('common.locale', 'uz-UZ');
   const currency = t('common.currency', "so'm");
 
@@ -91,14 +93,15 @@ export default function EmployeesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!kindergartenId) return;
     let refs = 0;
     const checkState = () => {
       refs++;
       if (refs >= 2) setIsLoading(false);
     };
 
-    const unsubscribeEmployees = subscribeEmployees((d: Employee[]) => { setEmployees(d); checkState(); });
-    const unsubscribeDepartments = subscribeDepartments((rows: Department[]) => {
+    const unsubscribeEmployees = subscribeEmployees(kindergartenId, (d: Employee[]) => { setEmployees(d); checkState(); });
+    const unsubscribeDepartments = subscribeDepartments(kindergartenId, (rows: Department[]) => {
       setCustomDepartments(rows.filter((d) => !FIXED_DEPARTMENTS.some((f) => f.id === d.id)));
       checkState();
     });
@@ -106,7 +109,7 @@ export default function EmployeesPage() {
       unsubscribeEmployees();
       unsubscribeDepartments();
     };
-  }, []);
+  }, [kindergartenId]);
   const createAddInitialData = (departmentId: string): EmployeeFormData => ({
     firstName: '',
     lastName: '',
@@ -229,7 +232,7 @@ export default function EmployeesPage() {
       performanceRating: 0,
     };
     try {
-      await createEmployee(payload);
+      await createEmployee(kindergartenId!, payload);
       // onSnapshot listener will auto-add the new employee to state
       setShowAddModal(false);
       toast.success(t('common.added', "Ajoyib! Yangi xodim qo'shildi"));
@@ -260,7 +263,7 @@ export default function EmployeesPage() {
       notes: data.notes,
     };
     try {
-      await updateEmployee(updated);
+      await updateEmployee(kindergartenId!, updated);
       // onSnapshot listener will auto-update employee in state
       setEditEmployee(null);
       setShowAddModal(false);
@@ -289,7 +292,7 @@ export default function EmployeesPage() {
       color: palette[departmentOptions.length % palette.length],
       headCount: 0,
     };
-    await createDepartment(stripIdFromEntity(newDept));
+    await createDepartment(kindergartenId!, stripIdFromEntity(newDept));
     setCustomDepartments((prev) => [...prev, newDept]);
     setShowAddType(false);
     setNewTypeName('');
@@ -305,7 +308,7 @@ export default function EmployeesPage() {
       return;
     }
     try {
-      await deleteDepartment(departmentId);
+      await deleteDepartment(kindergartenId!, departmentId);
       setCustomDepartments((prev) => prev.filter((d) => d.id !== departmentId));
       if (filters.department === departmentId) {
         setFilters((prev) => ({ ...prev, department: '' }));
@@ -584,7 +587,7 @@ export default function EmployeesPage() {
                 onClick={async () => {
                   if (!confirm(t('employees.page.bulk.confirmDelete', `${selectedIds.size} ta xodimni o'chirmoqchimisiz?`))) return;
                   try {
-                    await Promise.all(Array.from(selectedIds).map((id) => deleteEmployee(id)));
+                    await Promise.all(Array.from(selectedIds).map((id) => deleteEmployee(kindergartenId!, id)));
                     // onSnapshot listener will auto-remove deleted employees
                     setSelectedIds(new Set());
                     toast.success(t('common.deletedMultiple', `${selectedIds.size} ta ma'lumot o'chirildi`));
@@ -742,37 +745,45 @@ export default function EmployeesPage() {
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
-                          {contextMenu === emp.id && (
-                            <div className="absolute right-2 top-full mt-1 w-52 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20">
-                              <button onClick={() => openDetail(emp)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                                <Eye className="w-3.5 h-3.5" /> {t('employees.page.actions.viewProfile', "Profilni ko'rish")}
-                              </button>
-                              <button onClick={() => {
-                                setEditEmployee(emp);
-                                setShowDetail(false);
-                                setShowAddModal(true);
-                              }} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                                <Edit className="w-3.5 h-3.5" /> {t('common.edit', 'Tahrirlash')}
-                              </button>
-                              <button className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
-                                <Phone className="w-3.5 h-3.5" /> {t('employees.page.actions.call', "Qo'ng'iroq qilish")}
-                              </button>
-                              <div className="border-t border-border-subtle my-1" />
-                              <button onClick={async () => {
-                                if (!confirm(t('employees.confirmDelete', "Bu xodimni o'chirmoqchimisiz?"))) return;
-                                try {
-                                  await deleteEmployee(emp.id);
-                                  // onSnapshot listener will auto-remove from state
-                                  setContextMenu(null);
-                                  toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
-                                } catch (error) {
-                                  toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
-                                }
-                              }} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2">
-                                <Trash2 className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
-                              </button>
-                            </div>
-                          )}
+                          <AnimatePresence>
+                            {contextMenu === emp.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-2 top-full mt-1 w-52 bg-surface-primary rounded-xl shadow-lg border border-border-default py-1 z-20 origin-top-right"
+                              >
+                                <button onClick={() => openDetail(emp)} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                  <Eye className="w-3.5 h-3.5" /> {t('employees.page.actions.viewProfile', "Profilni ko'rish")}
+                                </button>
+                                <button onClick={() => {
+                                  setEditEmployee(emp);
+                                  setShowDetail(false);
+                                  setShowAddModal(true);
+                                }} className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                  <Edit className="w-3.5 h-3.5" /> {t('common.edit', 'Tahrirlash')}
+                                </button>
+                                <button className="w-full text-left px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-secondary flex items-center gap-2">
+                                  <Phone className="w-3.5 h-3.5" /> {t('employees.page.actions.call', "Qo'ng'iroq qilish")}
+                                </button>
+                                <div className="border-t border-border-subtle my-1" />
+                                <button onClick={async () => {
+                                  if (!confirm(t('employees.confirmDelete', "Bu xodimni o'chirmoqchimisiz?"))) return;
+                                  try {
+                                    await deleteEmployee(kindergartenId!, emp.id);
+                                    // onSnapshot listener will auto-remove from state
+                                    setContextMenu(null);
+                                    toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
+                                  } catch (error) {
+                                    toast.error(error instanceof Error ? error.message : "O'chirishda xatolik");
+                                  }
+                                }} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-2">
+                                  <Trash2 className="w-3.5 h-3.5" /> {t('common.delete', "O'chirish")}
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </td>
                       </motion.tr>
                     );
@@ -884,7 +895,7 @@ export default function EmployeesPage() {
         }}
         onDelete={async (id) => {
           try {
-            await deleteEmployee(id);
+            await deleteEmployee(kindergartenId!, id);
             setShowDetail(false);
             toast.success(t('common.deleted', "Muvaffaqiyatli o'chirildi"));
           } catch (error) {
