@@ -16,8 +16,7 @@ import {
 import { app } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { getUserProfile, upsertUserProfile, kindergartenService } from '@/services/firestore';
-import { seedAllData } from '@/data/seeds/seedFirestore';
-import { migrateToMultiTenant } from '@/utils/migrateToMultiTenant';
+
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
@@ -36,8 +35,7 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [saved, setSaved] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [isMigrating, setIsMigrating] = useState(false);
+
 
   // Profile status
   const [profile, setProfile] = useState({
