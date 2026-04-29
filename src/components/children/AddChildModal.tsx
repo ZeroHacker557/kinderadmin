@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 const childSchema = z.object({
   firstName: z.string().min(2, 'Ism kamida 2 ta harfdan iborat bo\'lishi kerak'),
   lastName: z.string().min(2, 'Familiya kamida 2 ta harfdan iborat bo\'lishi kerak'),
+  middleName: z.string().optional(),
   dateOfBirth: z.string().min(1, 'Tug\'ilgan sana kiritilishi shart'),
   gender: z.enum(['male', 'female']),
   groupId: z.string().min(1, 'Guruh tanlanishi shart'),
@@ -25,7 +26,8 @@ const childSchema = z.object({
     lastName: z.string().min(2, 'Familiya kiritilishi shart'),
     relation: z.enum(['mother', 'father', 'guardian']),
     phone: z.string().min(9, 'Telefon raqam noto\'g\'ri'),
-    occupation: z.string().optional()
+    occupation: z.string().optional(),
+    passportId: z.string().optional()
   })).min(1),
   medical: z.object({
     bloodType: z.string().optional(),
@@ -68,8 +70,8 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
   } = useForm<AddChildFormData>({
     resolver: zodResolver(childSchema),
     defaultValues: initialData || {
-      firstName: '', lastName: '', dateOfBirth: '', gender: 'male', groupId: '', status: 'active', address: '', notes: '',
-      parents: [{ firstName: '', lastName: '', relation: 'mother', phone: '', occupation: '' }],
+      firstName: '', lastName: '', middleName: '', dateOfBirth: '', gender: 'male', groupId: '', status: 'active', address: '', notes: '',
+      parents: [{ firstName: '', lastName: '', relation: 'mother', phone: '', occupation: '', passportId: '' }],
       medical: { bloodType: '', allergies: '', medications: '', conditions: '', emergencyContact: '', emergencyPhone: '', doctorName: '', doctorPhone: '', notes: '' },
     }
   });
@@ -83,8 +85,8 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
     if (isOpen) {
       if (initialData) reset(initialData);
       else reset({
-        firstName: '', lastName: '', dateOfBirth: '', gender: 'male', groupId: '', status: 'active', address: '', notes: '',
-        parents: [{ firstName: '', lastName: '', relation: 'mother', phone: '', occupation: '' }],
+        firstName: '', lastName: '', middleName: '', dateOfBirth: '', gender: 'male', groupId: '', status: 'active', address: '', notes: '',
+        parents: [{ firstName: '', lastName: '', relation: 'mother', phone: '', occupation: '', passportId: '' }],
         medical: { bloodType: '', allergies: '', medications: '', conditions: '', emergencyContact: '', emergencyPhone: '', doctorName: '', doctorPhone: '', notes: '' }
       });
       setCurrentStep(1);
@@ -93,7 +95,7 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
   }, [isOpen, initialData, reset]);
 
   const steps = [
-    { id: 1, label: t('children.addModal.stepPersonal', 'Shaxsiy ma\'lumot'), icon: <User className="w-4 h-4" />, fields: ['firstName', 'lastName', 'dateOfBirth', 'gender', 'groupId', 'status', 'address', 'notes'] },
+    { id: 1, label: t('children.addModal.stepPersonal', 'Shaxsiy ma\'lumot'), icon: <User className="w-4 h-4" />, fields: ['firstName', 'lastName', 'middleName', 'dateOfBirth', 'gender', 'groupId', 'status', 'address', 'notes'] },
     { id: 2, label: t('children.addModal.stepParents', 'Ota-ona'), icon: <Users className="w-4 h-4" />, fields: ['parents'] },
     { id: 3, label: t('children.addModal.stepMedical', 'Tibbiy ma\'lumot'), icon: <Heart className="w-4 h-4" />, fields: ['medical.emergencyContact', 'medical.emergencyPhone'] },
     { id: 4, label: t('children.addModal.stepReview', 'Tekshirish'), icon: <CheckCircle2 className="w-4 h-4" />, fields: [] },
@@ -169,6 +171,7 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
                     <Input label="Ism *" placeholder="Ismni kiriting" {...register('firstName')} error={errors.firstName?.message} />
                     <Input label="Familiya *" placeholder="Familiyani kiriting" {...register('lastName')} error={errors.lastName?.message} />
                   </div>
+                  <Input label="Otchestvo (Otasining ismi)" placeholder="Masalan: Sardor o'g'li" {...register('middleName')} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input label="Tug'ilgan sana *" type="date" {...register('dateOfBirth')} error={errors.dateOfBirth?.message} />
                     <div className="space-y-1.5">
@@ -248,10 +251,11 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
                         <Input label="Telefon raqam *" type="tel" placeholder="+998 90 000-00-00" {...register(`parents.${index}.phone`)} error={errors.parents?.[index]?.phone?.message} />
                         <Input label="Kasbi" placeholder="Ish joyi yoki kasbi" {...register(`parents.${index}.occupation`)} />
                       </div>
+                      <Input label="Pasport ID (seriya va raqam)" placeholder="AA 1234567" {...register(`parents.${index}.passportId`)} />
                     </div>
                   ))}
                   {parentFields.length < 3 && (
-                    <button type="button" onClick={() => append({ firstName: '', lastName: '', relation: 'father', phone: '', occupation: '' })} className="w-full py-3 rounded-xl border-2 border-dashed border-border-default text-sm font-medium text-text-tertiary hover:text-text-primary hover:border-primary/50 transition-all duration-200 flex items-center justify-center gap-2"><Plus className="w-4 h-4" />Boshqa ota-ona / vasiy qo'shish</button>
+                    <button type="button" onClick={() => append({ firstName: '', lastName: '', relation: 'father', phone: '', occupation: '', passportId: '' })} className="w-full py-3 rounded-xl border-2 border-dashed border-border-default text-sm font-medium text-text-tertiary hover:text-text-primary hover:border-primary/50 transition-all duration-200 flex items-center justify-center gap-2"><Plus className="w-4 h-4" />Boshqa ota-ona / vasiy qo'shish</button>
                   )}
                 </div>
               )}
@@ -300,6 +304,7 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
                     <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Bola ma'lumotlari</h4>
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                       <div><span className="text-text-tertiary">Ism:</span> <span className="font-medium text-text-primary">{formValues.firstName} {formValues.lastName}</span></div>
+                      {formValues.middleName && <div><span className="text-text-tertiary">Otchestvo:</span> <span className="font-medium text-text-primary">{formValues.middleName}</span></div>}
                       <div><span className="text-text-tertiary">Tug'ilgan sana:</span> <span className="font-medium text-text-primary">{formValues.dateOfBirth || '—'}</span></div>
                       <div><span className="text-text-tertiary">Jinsi:</span> <span className="font-medium text-text-primary">{formValues.gender === 'male' ? 'O\'g\'il' : 'Qiz'}</span></div>
                       <div><span className="text-text-tertiary">Guruh:</span> <span className="font-medium text-text-primary">{selectedGroup?.name || '—'}</span></div>
@@ -314,6 +319,7 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
                         <div><span className="text-text-tertiary">Ism:</span> <span className="font-medium text-text-primary">{parent.firstName} {parent.lastName}</span></div>
                         <div><span className="text-text-tertiary">Qarindoshlik:</span> <span className="font-medium text-text-primary">{relationLabels[parent.relation]}</span></div>
                         <div><span className="text-text-tertiary">Telefon:</span> <span className="font-medium text-text-primary">{parent.phone}</span></div>
+                        {parent.passportId && <div><span className="text-text-tertiary">Pasport ID:</span> <span className="font-medium text-text-primary">{parent.passportId}</span></div>}
                       </div>
                     ))}
                   </div>

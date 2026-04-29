@@ -203,7 +203,6 @@ body {
   .print-contract,
   .print-contract * {
     visibility: visible !important;
-    display: block !important;
   }
 
   .print-contract {
@@ -237,12 +236,16 @@ body {
     display: none !important;
   }
 
-  /* Ensure grid/flex children in the contract render properly */
-  .print-contract .grid {
-    display: grid !important;
+  /* Ensure the contract displays properly with inline styles */
+  .print-contract {
+    display: block !important;
   }
 
-  .print-contract .flex {
-    display: flex !important;
+  .print-contract div,
+  .print-contract p,
+  .print-contract span,
+  .print-contract strong {
+    color: black !important;
+    background: white !important;
   }
 }

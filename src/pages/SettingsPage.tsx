@@ -15,14 +15,14 @@ import {
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { getUserProfile, upsertUserProfile } from '@/services/firestore';
+import { getUserProfile, upsertUserProfile, kindergartenService } from '@/services/firestore';
 import { seedAllData } from '@/data/seeds/seedFirestore';
 import { migrateToMultiTenant } from '@/utils/migrateToMultiTenant';
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, kindergartenId, kindergarten } = useAuth();
   const auth = getAuth(app);
   const providerIds = auth.currentUser?.providerData.map((provider) => provider.providerId) ?? [];
   const canChangePassword = providerIds.includes('password');
@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({
     firstName: 'Admin',
     lastName: '',
+    kindergartenName: '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -82,6 +83,12 @@ export default function SettingsPage() {
     };
   }, [user?.id, user?.name]);
 
+  useEffect(() => {
+    if (kindergarten?.name) {
+      setProfile(p => ({ ...p, kindergartenName: kindergarten.name }));
+    }
+  }, [kindergarten?.name]);
+
   const handleSave = async () => {
     const firstName = profile.firstName.trim() || 'Admin';
     const lastName = profile.lastName.trim();
@@ -92,6 +99,11 @@ export default function SettingsPage() {
 
       // 1) Save profile to Firestore
       await upsertUserProfile(auth.currentUser.uid, { firstName, lastName });
+
+      // 1.5) Save kindergarten name
+      if (kindergartenId && profile.kindergartenName.trim()) {
+        await kindergartenService.update(kindergartenId, { name: profile.kindergartenName.trim() });
+      }
 
       // 2) Keep Firebase Auth displayName in sync (optional, but useful)
       await updateProfile(auth.currentUser, { displayName });
@@ -234,7 +246,7 @@ export default function SettingsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <label className={labelClass}>{t('settings.profile.firstName')}</label>
+                        <label className={labelClass}>{t('settings.profile.firstName', 'Ism')}</label>
                         <input
                           type="text"
                           value={profile.firstName}
@@ -243,7 +255,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className={labelClass}>{t('settings.profile.lastName')}</label>
+                        <label className={labelClass}>{t('settings.profile.lastName', 'Familiya')}</label>
                         <input
                           type="text"
                           value={profile.lastName}
@@ -251,6 +263,16 @@ export default function SettingsPage() {
                           className={inputClass}
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className={labelClass}>{t('settings.profile.kindergartenName', "Bog'cha nomi")}</label>
+                      <input
+                        type="text"
+                        value={profile.kindergartenName}
+                        onChange={e => setProfile(p => ({ ...p, kindergartenName: e.target.value }))}
+                        className={inputClass}
+                        placeholder="Bog'changiz nomini kiriting"
+                      />
                     </div>
                   </div>
 
@@ -317,58 +339,6 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* Seed Database Section */}
-                  <div className="bg-surface-primary rounded-2xl border border-red-200 p-5 sm:p-6 mt-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <Globe className="w-5 h-5 text-red-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-text-primary">Xavfli hudud (Danger Zone)</h3>
-                        <p className="text-xs text-text-tertiary">Barcha ma'lumotlarni o'chirib, test ma'lumotlarini yuklash</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={isSeeding}
-                      onClick={async () => {
-                        if (!confirm("Barcha ma'lumotlar o'chib ketadi. Rozimisiz?")) return;
-                        setIsSeeding(true);
-                        try {
-                          await seedAllData();
-                          alert("Ma'lumotlar muvaffaqiyatli tiklandi! Ilovani yangilang.");
-                          window.location.reload();
-                        } catch (e) {
-                          alert("Xatolik: " + (e as Error).message);
-                        } finally {
-                          setIsSeeding(false);
-                        }
-                      }}
-                      className="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
-                    >
-                      {isSeeding ? 'Yuklanmoqda...' : "Boshlang'ich ma'lumotlarni yuklash (Seed Database)"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isMigrating}
-                      onClick={async () => {
-                        if (!confirm("Mavjud ma'lumotlarni multi-tenant strukturasiga ko'chirish. Rozimisiz?")) return;
-                        setIsMigrating(true);
-                        try {
-                          const result = await migrateToMultiTenant();
-                          alert(result.message);
-                          if (result.success) window.location.reload();
-                        } catch (e) {
-                          alert("Xatolik: " + (e as Error).message);
-                        } finally {
-                          setIsMigrating(false);
-                        }
-                      }}
-                      className="px-4 py-2 bg-amber-600 text-white rounded-xl text-sm font-semibold hover:bg-amber-700 disabled:opacity-50 ml-2"
-                    >
-                      {isMigrating ? 'Ko\'chirmoqda...' : 'Multi-tenant migratsiya'}
-                    </button>
-                  </div>
                 </div>
               )}
 

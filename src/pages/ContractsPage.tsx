@@ -86,7 +86,12 @@ export default function ContractsPage() {
         ]}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
         {/* ===== Left Panel — Child Selector ===== */}
         <div className="lg:col-span-2 space-y-6">
           {/* Selector Card */}
@@ -243,7 +248,9 @@ export default function ContractsPage() {
                 {/* Child Info */}
                 <div className="p-3 rounded-lg bg-surface-secondary/50 border border-border-subtle">
                   <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1.5">{t('contracts.childInfo', 'Bola')}</p>
-                  <p className="text-sm font-medium text-text-primary">{selectedChild.lastName} {selectedChild.firstName}</p>
+                  <p className="text-sm font-medium text-text-primary">
+                    {selectedChild.lastName} {selectedChild.firstName} {selectedChild.middleName || ''}
+                  </p>
                   <p className="text-xs text-text-tertiary mt-0.5">{selectedChild.group}</p>
                 </div>
 
@@ -252,12 +259,12 @@ export default function ContractsPage() {
                   <div className="p-3 rounded-lg bg-surface-secondary/50 border border-border-subtle">
                     <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1.5">{t('contracts.parentInfo', 'Ota-ona')}</p>
                     <p className="text-sm font-medium text-text-primary">
-                      {selectedChild.parents[0].lastName} {selectedChild.parents[0].firstName}
+                      {selectedChild.parents[0].lastName} {selectedChild.parents[0].firstName} {(selectedChild.parents[0] as any).middleName || ''}
                     </p>
                     <p className="text-xs text-text-tertiary mt-0.5">{selectedChild.parents[0].phone}</p>
-                    {selectedChild.parents[0].passportSeries && (
+                    {(selectedChild.parents[0].passportId || selectedChild.parents[0].passportSeries) && (
                       <p className="text-xs text-text-tertiary mt-0.5">
-                        {t('contracts.passportLabel', 'Pasport:')} {selectedChild.parents[0].passportSeries}
+                        {t('contracts.passportLabel', 'Pasport:')} {selectedChild.parents[0].passportId || selectedChild.parents[0].passportSeries}
                       </p>
                     )}
                   </div>
@@ -294,7 +301,7 @@ export default function ContractsPage() {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ===== Hidden Print Template ===== */}
       {selectedChild && (

@@ -13,10 +13,12 @@ import {
 
 import EmptyState from "@/components/ui/EmptyState";
 import Pagination from "@/components/ui/Pagination";
-import { subscribeChildren } from "@/services/firestore";
+import { subscribeChildren, updateChild } from "@/services/firestore";
 import type { Child, ChildPayment, Parent, PaymentStatus } from "@/types";
 import { downloadCsv } from "@/utils/csv";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "react-hot-toast";
+import EditParentModal, { type EditParentFormData } from "@/components/parents/EditParentModal";
 
 type RelationFilter = "all" | "mother" | "father" | "guardian";
 type PaymentSummaryFilter = "all" | PaymentStatus;
@@ -46,6 +48,7 @@ interface ParentDirectoryItem {
   familyKey: string;
   childChips: ParentChildChip[];
   searchableText: string;
+  childIds: string[];
 }
 
 interface AggregateParentBucket {
@@ -63,6 +66,7 @@ interface AggregateParentBucket {
   lastPaymentMonth: string | null;
   lastPaymentOrder: number;
   childChips: ParentChildChip[];
+  rawParent: Parent;
 }
 
 const ITEMS_PER_PAGE = 8;
@@ -289,6 +293,9 @@ export default function ParentsPage(): JSX.Element {
   const [relationFilter, setRelationFilter] = useState<RelationFilter>("all");
   const [statusFilter, setStatusFilter] = useState<PaymentSummaryFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingBucket, setEditingBucket] = useState<AggregateParentBucket | null>(null);
 
   useEffect(() => {
     if (!kindergartenId) return;
@@ -354,6 +361,7 @@ export default function ParentsPage(): JSX.Element {
             lastPaymentMonth: null,
             lastPaymentOrder: 0,
             childChips: [],
+            rawParent: parent
           });
         }
 
@@ -411,6 +419,7 @@ export default function ParentsPage(): JSX.Element {
           pendingCount: bucket.pendingCount,
           partialCount: bucket.partialCount,
           lastPaymentMonth: bucket.lastPaymentMonth,
+          childIds: Array.from(bucket.childIds),
         };
 
         const summaryStatus = deriveSummaryStatus(baseItem);
@@ -434,7 +443,8 @@ export default function ParentsPage(): JSX.Element {
               ...childrenNames,
             ].join(" "),
           ),
-        } satisfies ParentDirectoryItem;
+          rawParent: bucket.rawParent
+        } satisfies ParentDirectoryItem & { rawParent: Parent };
       })
       .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }, [children, relationLabels]);
@@ -492,6 +502,50 @@ export default function ParentsPage(): JSX.Element {
     downloadCsv(`parents-directory-${new Date().toISOString().slice(0, 10)}.csv`, rows);
   };
 
+  const handleEditClick = (bucket: any) => {
+    setSelectedParent(bucket.rawParent);
+    setEditingBucket(parentRows.find(r => r.id === bucket.id) as any);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveParent = async (data: EditParentFormData) => {
+    if (!kindergartenId || !editingBucket) return;
+    
+    try {
+      const childIds = Array.from(editingBucket.childIds);
+      
+      await Promise.all(childIds.map(async (childId) => {
+        const child = children.find(c => c.id === childId);
+        if (!child) return;
+        
+        const updatedParents = child.parents.map(p => {
+          if (getParentAggregateKey(p, child.id, child.parents.indexOf(p), t) === editingBucket.id) {
+            return {
+              ...p,
+              firstName: data.firstName,
+              lastName: data.lastName,
+              middleName: data.middleName || '',
+              relation: data.relation,
+              phone: data.phone,
+              email: data.email || '',
+              occupation: data.occupation || '',
+              address: data.address || '',
+              passportId: data.passportId || ''
+            };
+          }
+          return p;
+        });
+        
+        await updateChild(kindergartenId, { ...child, parents: updatedParents });
+      }));
+      
+      toast.success(t('common.saved', "Muvaffaqiyatli saqlandi"));
+      setEditModalOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Saqlashda xatolik");
+    }
+  };
+
   const stats = [
     {
       title: t("parents.stats.totalParents", { defaultValue: "Total parents" }),
@@ -542,13 +596,6 @@ export default function ParentsPage(): JSX.Element {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="relative min-h-[80vh] space-y-8"
     >
-      {/* Decorative Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -right-24 -top-24 h-96 w-96 animate-pulse rounded-full bg-sky-400/10 blur-3xl mix-blend-multiply dark:bg-sky-500/10 dark:mix-blend-screen" />
-        <div className="absolute -left-24 top-32 h-72 w-72 animate-pulse rounded-full bg-violet-400/10 blur-3xl mix-blend-multiply dark:bg-violet-500/10 dark:mix-blend-screen" style={{ animationDelay: "2s" }} />
-        <div className="absolute -bottom-24 left-1/2 h-80 w-80 -translate-x-1/2 animate-pulse rounded-full bg-fuchsia-400/10 blur-3xl mix-blend-multiply dark:bg-fuchsia-500/10 dark:mix-blend-screen" style={{ animationDelay: "4s" }} />
-      </div>
-
       {/* Header Section */}
       <header className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="relative z-10">
@@ -746,6 +793,7 @@ export default function ParentsPage(): JSX.Element {
                     <th className="px-6 py-5">{t("parents.table.children", { defaultValue: "Children" })}</th>
                     <th className="px-6 py-5">{t("parents.table.paymentHealth", { defaultValue: "Payment health" })}</th>
                     <th className="px-6 py-5">{t("parents.table.lastPayment", { defaultValue: "Last payment month" })}</th>
+                    <th className="px-6 py-5 w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle bg-transparent">
@@ -845,6 +893,11 @@ export default function ParentsPage(): JSX.Element {
                           {formatMonthLabel(row.lastPaymentMonth, i18n.language)}
                         </span>
                       </td>
+                      <td className="px-6 py-5 text-right">
+                        <button onClick={() => handleEditClick(row)} className="p-2 rounded-xl text-text-tertiary hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -870,6 +923,9 @@ export default function ParentsPage(): JSX.Element {
                       <p className="text-sm font-medium text-text-tertiary">{row.relationSummary || "—"}</p>
                     </div>
                   </div>
+                  <button onClick={() => handleEditClick(row)} className="p-2 rounded-xl text-text-tertiary hover:text-sky-600 hover:bg-sky-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                  </button>
                 </div>
 
                 <div className="mt-5 grid gap-3 rounded-2xl bg-surface-secondary p-4 ring-1 ring-inset ring-border-subtle">
@@ -1008,6 +1064,13 @@ export default function ParentsPage(): JSX.Element {
           </div>
         </motion.div>
       )}
+      {/* Edit Modal */}
+      <EditParentModal 
+        isOpen={editModalOpen} 
+        onClose={() => setEditModalOpen(false)} 
+        onSubmit={handleSaveParent}
+        initialData={selectedParent}
+      />
     </motion.div>
   );
 }

@@ -117,6 +117,7 @@ export interface Parent {
   occupation?: string;
   address?: string;
   passportSeries?: string;
+  passportId?: string;
 }
 
 export interface MedicalInfo {
@@ -145,6 +146,7 @@ export interface Child {
   id: string;
   firstName: string;
   lastName: string;
+  middleName?: string;
   dateOfBirth: string;
   gender: Gender;
   photo?: string;
@@ -163,6 +165,7 @@ export interface Child {
 export interface ChildFormData {
   firstName: string;
   lastName: string;
+  middleName?: string;
   dateOfBirth: string;
   gender: Gender;
   group: string;

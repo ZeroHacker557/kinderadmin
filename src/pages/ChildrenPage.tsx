@@ -143,6 +143,7 @@ export default function ChildrenPage() {
   const toFormData = (child: Child): AddChildFormData => ({
     firstName: child.firstName,
     lastName: child.lastName,
+    middleName: child.middleName ?? '',
     dateOfBirth: child.dateOfBirth,
     gender: child.gender,
     groupId: child.groupId,
@@ -155,6 +156,7 @@ export default function ChildrenPage() {
       relation: parent.relation,
       phone: parent.phone,
       occupation: parent.occupation ?? '',
+      passportId: parent.passportId ?? '',
     })),
     medical: {
       bloodType: child.medical.bloodType ?? '',
@@ -178,6 +180,7 @@ export default function ChildrenPage() {
       ...editChild,
       firstName: data.firstName,
       lastName: data.lastName,
+      middleName: data.middleName || '',
       dateOfBirth: data.dateOfBirth,
       gender: data.gender,
       groupId: data.groupId,
@@ -193,6 +196,7 @@ export default function ChildrenPage() {
         phone: parent.phone,
         email: editChild.parents[index]?.email ?? '',
         occupation: parent.occupation || '',
+        passportId: parent.passportId || '',
       })),
       medical: {
         ...editChild.medical,
@@ -210,6 +214,7 @@ export default function ChildrenPage() {
       id: `ch-${Date.now()}`,
       firstName: data.firstName,
       lastName: data.lastName,
+      middleName: data.middleName || '',
       dateOfBirth: data.dateOfBirth,
       gender: data.gender,
       groupId: data.groupId,
@@ -227,6 +232,7 @@ export default function ChildrenPage() {
         phone: parent.phone,
         email: '',
         occupation: parent.occupation || '',
+        passportId: parent.passportId || '',
       })),
       medical: {
         bloodType: (data.medical.bloodType || '') as any,

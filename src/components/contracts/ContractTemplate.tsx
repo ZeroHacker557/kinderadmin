@@ -1,167 +1,146 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import type { Child, Kindergarten } from '@/types';
-import { formatDateDisplay } from '@/utils/date';
 
 interface ContractTemplateProps {
   child: Child;
   kindergarten: Kindergarten | null;
 }
 
+const pg: React.CSSProperties = {
+  width: '210mm',
+  height: '297mm',
+  margin: '0 auto',
+  background: 'white',
+  color: 'black',
+  padding: '14mm 16mm 10mm 16mm',
+  fontFamily: '"Times New Roman", Times, serif',
+  fontSize: '10.5px',
+  lineHeight: '1.35',
+  boxSizing: 'border-box',
+  overflow: 'hidden',
+  pageBreakAfter: 'always',
+};
+
+const t: React.CSSProperties = { textAlign: 'justify', marginBottom: '2px', textIndent: '18px' };
+const sec: React.CSSProperties = { textAlign: 'center', fontWeight: 'bold', marginBottom: '4px', marginTop: '7px', fontSize: '11px' };
+const bl: React.CSSProperties = { fontWeight: 'bold', marginBottom: '2px', marginTop: '4px' };
+
 const ContractTemplate = React.forwardRef<HTMLDivElement, ContractTemplateProps>(
   ({ child, kindergarten }, ref) => {
-    const { t } = useTranslation();
-
-    const primaryParent = child.parents?.[0];
-    const parentFullName = primaryParent
-      ? `${primaryParent.lastName} ${primaryParent.firstName}`
-      : '_______________';
-    const passportSeries = primaryParent?.passportSeries || '_______________';
-    const parentAddress = primaryParent?.address || child.address || '_______________';
-    const parentPhone = primaryParent?.phone || '_______________';
-    const childFullName = `${child.lastName} ${child.firstName}`;
-    const kindergartenName = kindergarten?.name || "Bog'cha";
-
-    const enrollmentDate = child.enrollmentDate
-      ? formatDateDisplay(child.enrollmentDate)
-      : '_______________';
-
-    const todayDate = formatDateDisplay(new Date().toISOString());
-
-    const contractNumber = `${new Date().getFullYear()}-${child.id?.slice(-6)?.toUpperCase() || '000000'}`;
+    const pr = child.parents?.[0];
+    const parentName = pr ? `${pr.lastName} ${pr.firstName} ${(pr as any).middleName || ''}`.trim() : '_______________';
+    const passport = pr?.passportId || pr?.passportSeries || '_______________';
+    const addr = pr?.address || child.address || '_______________';
+    const phone = pr?.phone || '_______________';
+    const childName = `${child.lastName} ${child.firstName} ${child.middleName || ''}`.trim();
+    const kName = kindergarten?.name || 'SDASIS GROUP';
+    const kAddr = kindergarten?.address || 'Яшнабадский район Олмос МФЙ ул. Лйкатор 3-проезд 66А';
+    const kPhone = kindergarten?.phone || '+998951850900';
+    const yr = new Date().getFullYear();
+    const cNum = `${yr}-${child.id?.slice(-6)?.toUpperCase() || '000000'}`;
 
     return (
       <div ref={ref} className="print-contract hidden print:block">
-        <div className="w-[210mm] min-h-[297mm] mx-auto bg-white text-black p-[20mm] font-serif text-[13px] leading-relaxed">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">
-              {t('contracts.template.docType', 'Shartnoma')}
+        {/* ===== PAGE 1 ===== */}
+        <div style={pg}>
+          <div style={{ textAlign: 'center', marginBottom: '6px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', letterSpacing: '3px' }}>ДОГОВОР №<span style={{ borderBottom: '1px solid #000' }}>{cNum}</span></div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '10.5px' }}>
+            <span>«____»____________ {yr} г.</span>
+            <span>г. Ташкент</span>
+          </div>
+          <p style={t}>Настоящий Договор составлен между СП «<strong>{kName}</strong>», (далее - Учреждение), в лице директора Усманова Д.К. действующей на основании учредительного договора, именуемый далее «<strong>Исполнитель</strong>» с одной стороны и</p>
+          <p style={t}>на основании удостоверение личность именуемого в дальнейшем «<strong>Родитель</strong>», с другой стороны, далее по отдельности, именуемые «Сторона», а совместно именуемые «Стороны», заключили настоящий договор о нижеследующем:</p>
+
+          <p style={sec}>I. Предмет договора</p>
+          <p style={t}>1.1. Предметом договора является оказание Учреждением воспитательную образовательных услуг в рамках реализации основной образовательной программой дошкольного образования в соответствии с законодательством Республики Узбекистана, а Родитель оплатить платных образовательных услуг в сфере дошкольного образования, наименование, объёмы и форма которых определяются в образовательной программе.</p>
+          <p style={t}>1.2. Услуги, предусмотренные в п.1.1. настоящего Договора, Исполнитель оказывает самостоятельно либо с привлечением третьих лиц.</p>
+          <p style={t}>1.3. Режим пребывания воспитанника в Учреждении – <strong>с понедельника по субботу</strong> с 08.00 до 18.00, в группах с 10-часовым пребыванием воспитанника в возрасте от 1 до 7 лет.</p>
+          <p style={t}>1.4. Ф.И.О ребенка <span style={{ borderBottom: '1px solid #000', fontWeight: 'bold', padding: '0 6px' }}> {childName} </span></p>
+
+          <p style={sec}>II. Права и обязанности сторон</p>
+          <p style={bl}>2.1. Исполнитель в праве:</p>
+          <p style={t}>2.1.1. Использовать педагогически обоснованные формы, средства, методы обучения и воспитания;</p>
+          <p style={t}>2.1.2. Проявлять творческую инициативу в пределах реализуемой образовательной программой;</p>
+          <p style={t}>2.1.3. Осуществлять подбор и расстановку кадров, привлекая для выполнения работ по оказанию платных услуг как основных сотрудников Учреждения, так и специалистов из других организаций.</p>
+          <p style={t}>2.1.4. Исполнитель вправе расторгнуть Договор с Родителем в случаях несоблюдения (нарушения, невыполнения требований) положений настоящего Договора.</p>
+
+          <p style={bl}>2.2. Родитель в праве:</p>
+          <p style={t}>2.2.1. Требовать от Исполнителя предоставления информацию по вопросам касающейся организации и обеспечения надлежащего исполнения услуг, предусмотренных разделом 1. настоящего договора, образовательной деятельности исполнителя.</p>
+          <p style={t}>2.2.2. Знакомиться с документами, регламентирующий организацию и осуществлению образовательной деятельности, ознакомиться с используемыми методами обучения и воспитания, образовательными технологиями.</p>
+
+          <p style={bl}>2.3. Исполнитель обязан:</p>
+          <p style={t}>2.3.1. Организовать и обеспечить надлежащие исполнение услуг, предусмотренных в п.1.1 настоящего Договора. Образование все виды платных услуг оказывается в соответствии с утверждённой Государственной программой «Первый шаг», годовым планом воспитательной работы, составленный и утверждённый Исполнителем.</p>
+          <p style={t}>2.3.2. Обеспечить санитарно-гигиенические условия для организации платных образовательных услуг;</p>
+          <p style={t}>2.3.3. Проявлять уважение к личности воспитанника, сберегать его физическое и психологическое здоровье;</p>
+          <p style={t}>2.3.4. Сохранить место за воспитанником в случае его болезни, и в других случаях пропуска по уважительным причинам (при условии оплаты услуг Родителем, предусмотренных разделом 3 настоящего Договора), при этом в период отсутствия воспитанника, оплативший сумма должна перейти не подлежит.</p>
+          <p style={t}>2.3.5. В случае выявления заболеваний у воспитанника, не позволяющих продолжить обучения (по заключению учреждений здравоохранения, либо медицинского персонала Исполнитель), освободить воспитанника от защиты и незамедлительно известить Родителя.</p>
+
+          <p style={bl}>2.4. Родитель обязан:</p>
+          <p style={t}>2.4.1. Своевременно вносить плату за оказанные услуги.</p>
+          <p style={t}>2.4.2. Незамедлительно сообщить Исполнителю об изменение контактного телефона и места жительства;</p>
+          <p style={t}>2.4.3. Извещать Исполнителя об уважительных причинах отсутствие воспитанника сада, в случаях, когда воспитанника отсутствие более одного дня. Родитель обязан представить соответствующие справку медицинского учреждения с указанного данные и о возможности посещения в случае больного воспитанника.</p>
+          <p style={t}>2.4.4. В случаях, предусмотренных п.2.3.5, настоящего Договора, незамедлительно забирать воспитанника и принять необходимые меры для его выздоровления.</p>
+          <p style={t}>2.4.5. <strong>Информировать</strong> Исполнителя обо всех изменений у воспитанника болезнюковых, нездоровых и предоставлять запрос информацию, связанную об здоровье и психологическом состоянии воспитанника.</p>
+          <p style={t}>2.4.6. Приходить на беседы при наличии претензий к поведению воспитанника и его отношению к получению образовательных услуг.</p>
+          <p style={t}>2.4.7. Проявлять уважение к педагогами, администраций.</p>
+          <p style={t}>2.4.8. Родитель (законный представитель) настоящим даёт своё согласие на фото- и видеосъёмку его ребёнка в период пребывания в детском саду, использование фото- и видеоматериалов, на которых изображены ребёнок, в целях продвижения деятельности детского сада, включая размещения в социальных сетях, на официальном сайте</p>
+        </div>
+
+        {/* ===== PAGE 2 ===== */}
+        <div style={{ ...pg, pageBreakAfter: 'auto' }}>
+          <p style={{ textAlign: 'justify', marginBottom: '4px' }}>учреждение и в рекламных материалах.</p>
+          <p style={t}>2.4.9. Обеспечить посещение воспитанника.</p>
+          <p style={t}>2.4.10. Родитель соглашается с утверждённым учебным планом Исполнителя и принимает необходимые дополнительные меры для усвоения воспитанниками его.</p>
+          <p style={t}>2.4.11. Лично приводить и забирать воспитанника, либо предоставления Исполнителю в письме иных лица, которые могут быть доверенных, о номерах телефонов для связи с Родителем.</p>
+          <p style={t}>2.4.12. Не допускать нахождение у воспитанника ювелирных изделий, сотовых телефонов, денежных средств и других ценных вещей, за сохранность которых Исполнитель не несёт ответственности.</p>
+
+          <p style={sec}>III. Размер, сроки и порядок оплаты за платные образовательные услуги</p>
+          <p style={t}>3.1. Стоимость услуг - <strong>2 500 000 (два миллиона пятьсот тысяч) сум</strong> в месяц, без НДС.</p>
+          <p style={t}>3.2. Родитель осуществляет оплату ежемесячно с 25 текущего по 5 число следующего месяца.</p>
+          <p style={t}>3.3. Указанная в п.3.1. стоимость услуг Исполнителя могут быть изменены Исполнителем в одностороннем порядке в случая повышения размера минимальной суммы заработной платы в области бухгалтерских, а также по усмотрению Исполнителя по иным причинам, вызванные влиянием объективных экономических факторов.</p>
+          <p style={t}>При этом Исполнитель обязан уведомить Родителей в Telegram канале <strong>(ваш t.me/imperialkiduz)</strong> и рассылать информацию через рассылку в течение не менее за 3 (три) дня до предполагаемого изменения.</p>
+          <p style={t}>В случае согласия Заказчика с изменением расценок за стоимость услуг Исполнителя, стороны подписывает соответствующее дополнительное соглашение к настоящему договору.</p>
+          <p style={t}>В случае отказа Заказчика от изменений цен и стоимость услуг, расторжение настоящего договора оформляется сторонами письменного согласования, после осуществления Заказчиком взаиморасчётов в полном объёме с Исполнителем за оказанный период.</p>
+          <p style={t}>3.4. В случае несвоевременной оплаты услуг в срок указанный в п.3.2. настоящего договора, Заказчик уплачивает Исполнителю пению в размере 2% от суммы просроченной платежа за каждый день просрочки, но более 50% от суммы просроченного платежа.</p>
+          <p style={t}>3.5. В случае неоплаты в указанный срок без уважительной причины и не уведомления Исполнителя, с 6 числа следующего месяца воспитанника не будет допускать Исполнителем, осуществление оплата за текущий месяц не подлежит возврату.</p>
+          <p style={t}>3.6. В случае отсутствии и несвоевременного подачи Родителем, сделанная предоплата за текущий месяц не подлежит возврату и возмещению.</p>
+
+          <p style={sec}>IV. Срок действие договора</p>
+          <p style={t}>4.1. Договор вступает в силу с даты подписания Сторонами и действует до 31 декабря {yr + 1} г.</p>
+
+          <p style={sec}>V. Основания изменения и расторжения договора</p>
+          <p style={t}>5.1. Исполнитель вправе отказаться от исполнения обязательств по договору в одностороннем порядке, если Родитель нарушает сроки оплаты услуг (п.3.2) по настоящему договору, либо совершит неадекватных нарушений обязательств, предусмотренным разделом 2 настоящего Договора, ли затрагивает исполнение нарушает право и законных интересы воспитанника и сотрудников Исполнителя.</p>
+          <p style={t}>5.2. В случае серьёзных нарушении информации о возможности, указанным в п.2.4.6, в случаях отсутствие воспитанника без уважительные причин более 3-х дней, Исполнитель оставляет за собой право незамедлительно расторгнуть Договор в одностороннем порядке.</p>
+          <p style={t}>5.3. В случае досрочного расторжение настоящего Договора по инициативе Родителем, сделанная предоплата за текущий месяц не подлежит возврату и возмещению.</p>
+
+          <p style={sec}>VI. Порядок разрешение споров</p>
+          <p style={t}>6.1. Споры, не разрешённые путём переговоров, подлежат разрешению в суде по гражданским делам по месту нахождения "Исполнителя".</p>
+
+          <p style={sec}>VII. Прочие условия</p>
+          <p style={t}>7.1. Настоящий договор составлен на русском языке и подпись в двух экземплярах, по одному для каждой из сторон, при этом каждый экземпляр имеет равную юридическую силу.</p>
+          <p style={t}>7.2. Информация о вступления в силу настоящего договора, все ранее заключённые между Сторонами договора по предмету настоящего договора теряют юридическую силу.</p>
+
+          <p style={sec}>VIII. Адреса и реквизиты сторон</p>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+            <div style={{ flex: 1, fontSize: '9.5px' }}>
+              <p style={{ fontWeight: 'bold', marginBottom: '2px' }}>Семейное предприятие</p>
+              <p style={{ fontWeight: 'bold', marginBottom: '3px' }}>«{kName}».</p>
+              <p style={{ marginBottom: '1px' }}>{kAddr}</p>
+              <p style={{ marginBottom: '1px' }}>МФО: 01158 ИНН: 311702354</p>
+              <p style={{ marginBottom: '1px' }}>«Капиталбанк» г Ташкент</p>
+              <p style={{ marginBottom: '1px' }}>20208 00090 71860 33001</p>
+              <p style={{ marginBottom: '5px' }}>Тел: {kPhone}</p>
+              <p style={{ marginBottom: '10px' }}>Директор Усманова Д.К.</p>
+              <p>М.П. ___________________</p>
             </div>
-            <h1 className="text-xl font-bold uppercase tracking-wide mb-1">
-              {t('contracts.template.title', "TA'LIM XIZMATLARI KO'RSATISH SHARTNOMASI")}
-            </h1>
-            <div className="text-sm text-gray-600 mt-2">
-              № {contractNumber}
-            </div>
-          </div>
-
-          {/* Date & Location */}
-          <div className="flex justify-between mb-6 text-sm">
-            <span>{t('contracts.template.city', 'Toshkent shahri')}</span>
-            <span>{todayDate}</span>
-          </div>
-
-          <hr className="border-gray-300 mb-6" />
-
-          {/* Parties */}
-          <div className="mb-6">
-            <p className="mb-3 text-justify">
-              <strong>"{kindergartenName}"</strong>{' '}
-              {t('contracts.template.partyA', "maktabgacha ta'lim muassasasi (bundan buyon — \"Muassasa\"), bir tomondan, va")}
-            </p>
-            <p className="mb-3 text-justify">
-              {t('contracts.template.citizen', 'Fuqaro')}{' '}
-              <strong className="underline decoration-dotted underline-offset-4">{parentFullName}</strong>,{' '}
-              {t('contracts.template.passport', 'pasport seriyasi va raqami:')}{' '}
-              <strong className="underline decoration-dotted underline-offset-4">{passportSeries}</strong>,{' '}
-              {t('contracts.template.livingAt', 'yashash manzili:')}{' '}
-              <strong className="underline decoration-dotted underline-offset-4">{parentAddress}</strong>{' '}
-              {t('contracts.template.partyB', "(bundan buyon — \"Ota-ona\"), ikkinchi tomondan, quyidagi shartnomani tuzdilar:")}
-            </p>
-          </div>
-
-          {/* Section 1 */}
-          <div className="mb-5">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section1Title', '1. SHARTNOMA PREDMETI')}
-            </h2>
-            <p className="mb-2 text-justify">
-              1.1. {t('contracts.template.s1p1', "Muassasa Ota-onaning farzandi")}{' '}
-              <strong className="underline decoration-dotted underline-offset-4">{childFullName}</strong>{' '}
-              {t('contracts.template.s1p1cont', "ni maktabgacha ta'lim dasturi bo'yicha o'qitish va tarbiyalash xizmatlarini ko'rsatishni, Ota-ona esa belgilangan tartibda to'lov to'lashni o'z zimmasiga oladi.")}
-            </p>
-            <p className="mb-2 text-justify">
-              1.2. {t('contracts.template.s1p2', 'Bolaning qabul qilingan sanasi:')}{' '}
-              <strong className="underline decoration-dotted underline-offset-4">{enrollmentDate}</strong>.
-            </p>
-            <p className="text-justify">
-              1.3. {t('contracts.template.s1p3', "Ta'lim xizmatlari muassasa tomonidan belgilangan kun tartibi, dastur va me'yorlar asosida ko'rsatiladi.")}
-            </p>
-          </div>
-
-          {/* Section 2 */}
-          <div className="mb-5">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section2Title', '2. MUASSASA MAJBURIYATLARI')}
-            </h2>
-            <p className="mb-1 text-justify">2.1. {t('contracts.template.s2p1', "Bolani sog'lom va xavfsiz muhitda tarbiyalash, ta'lim dasturlarini yuqori sifatda amalga oshirish.")}</p>
-            <p className="mb-1 text-justify">2.2. {t('contracts.template.s2p2', "Bolaning ovqatlanishi, sog'lig'i va shaxsiy gigiyenasiga alohida e'tibor qaratish.")}</p>
-            <p className="mb-1 text-justify">2.3. {t('contracts.template.s2p3', "Ota-onani bolaning rivojlanishi, salomatligi va xulqi to'g'risida o'z vaqtida xabardor qilish.")}</p>
-            <p className="text-justify">2.4. {t('contracts.template.s2p4', 'Muassasada belgilangan ichki tartib-qoidalarga rioya qilish.')}</p>
-          </div>
-
-          {/* Section 3 */}
-          <div className="mb-5">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section3Title', '3. OTA-ONA MAJBURIYATLARI')}
-            </h2>
-            <p className="mb-1 text-justify">3.1. {t('contracts.template.s3p1', "Har oyning 10-sanasigacha oylik to'lovni to'liq miqdorda amalga oshirish.")}</p>
-            <p className="mb-1 text-justify">3.2. {t('contracts.template.s3p2', 'Bolani soat 8:00 dan 9:00 gacha muassasaga olib kelish va soat 17:00 dan 18:00 gacha olib ketish.')}</p>
-            <p className="mb-1 text-justify">3.3. {t('contracts.template.s3p3', "Bola kasallangan hollarda muassasani zudlik bilan xabardor qilish va tibbiy ma'lumotnomani taqdim etish.")}</p>
-            <p className="text-justify">3.4. {t('contracts.template.s3p4', "Muassasa ichki tartib-qoidalariga rioya qilish va tarbiyaviy jarayonga ko'maklashish.")}</p>
-          </div>
-
-          {/* Section 4 */}
-          <div className="mb-5">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section4Title', "4. TO'LOV SHARTLARI")}
-            </h2>
-            <p className="mb-1 text-justify">4.1. {t('contracts.template.s4p1', "Oylik to'lov miqdori muassasa tomonidan belgilanadi va har o'quv yili boshida Ota-onaga yozma ravishda bildiriladi.")}</p>
-            <p className="text-justify">4.2. {t('contracts.template.s4p2', "To'lov muddati o'tgan taqdirda, muassasa qo'shimcha chora ko'rish huquqiga ega.")}</p>
-          </div>
-
-          {/* Section 5 */}
-          <div className="mb-5">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section5Title', '5. SHARTNOMA MUDDATI VA BEKOR QILISH')}
-            </h2>
-            <p className="mb-1 text-justify">5.1. {t('contracts.template.s5p1', "Ushbu shartnoma imzolangan kundan boshlab bir o'quv yili davomida amal qiladi.")}</p>
-            <p className="mb-1 text-justify">5.2. {t('contracts.template.s5p2', 'Har bir tomon shartnomani bekor qilish uchun kamida 30 kun oldin yozma bildirishnoma yuborishi shart.')}</p>
-            <p className="text-justify">5.3. {t('contracts.template.s5p3', 'Shartnoma shartlari buzilgan taqdirda, aybdor tomon javobgar hisoblanadi.')}</p>
-          </div>
-
-          {/* Section 6 */}
-          <div className="mb-8">
-            <h2 className="font-bold text-sm mb-2 uppercase">
-              {t('contracts.template.section6Title', '6. YAKUNIY QOIDALAR')}
-            </h2>
-            <p className="mb-1 text-justify">6.1. {t('contracts.template.s6p1', "Ushbu shartnoma ikki nusxada tuzilgan bo'lib, har bir tomon uchun bir nusxa mo'ljallangan.")}</p>
-            <p className="text-justify">6.2. {t('contracts.template.s6p2', "Shartnomaga kiritilgan barcha o'zgartirish va qo'shimchalar yozma ravishda rasmiylashtiriladi.")}</p>
-          </div>
-
-          {/* Signatures */}
-          <div className="mt-12 grid grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-bold text-sm mb-4 uppercase">{t('contracts.template.institutionSide', 'MUASSASA')}</h3>
-              <div className="space-y-3 text-sm">
-                <p>{kindergartenName}</p>
-                <div className="mt-8 pt-1 border-t border-gray-400 w-48">
-                  <span className="text-[11px] text-gray-500">{t('contracts.template.signatureLine', 'Imzo / M.O.')}</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="font-bold text-sm mb-4 uppercase">{t('contracts.template.parentSide', 'OTA-ONA')}</h3>
-              <div className="space-y-2 text-sm">
-                <p><span className="text-gray-500">{t('contracts.template.fullName', 'F.I.SH:')}</span> {parentFullName}</p>
-                <p><span className="text-gray-500">{t('contracts.template.passportLabel', 'Pasport:')}</span> {passportSeries}</p>
-                <p><span className="text-gray-500">{t('contracts.template.addressLabel', 'Manzil:')}</span> {parentAddress}</p>
-                <p><span className="text-gray-500">{t('contracts.template.phoneLabel', 'Telefon:')}</span> {parentPhone}</p>
-                <div className="mt-8 pt-1 border-t border-gray-400 w-48">
-                  <span className="text-[11px] text-gray-500">{t('contracts.template.signatureLine', 'Imzo / M.O.')}</span>
-                </div>
-              </div>
+            <div style={{ flex: 1, fontSize: '9.5px' }}>
+              <p style={{ marginBottom: '3px' }}><strong>Ф.И.О.</strong> <span style={{ borderBottom: '1px dotted #000' }}>{parentName}</span></p>
+              <p style={{ marginBottom: '3px' }}>Адрес: <span style={{ borderBottom: '1px dotted #000' }}>{addr}</span></p>
+              <p style={{ marginBottom: '3px' }}>Паспорт: <span style={{ borderBottom: '1px dotted #000' }}>{passport}</span></p>
+              <p style={{ marginBottom: '3px' }}>Тел: <span style={{ borderBottom: '1px dotted #000' }}>{phone}</span></p>
+              <p style={{ marginTop: '18px' }}>___________________</p>
             </div>
           </div>
         </div>
