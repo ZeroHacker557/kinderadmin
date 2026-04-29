@@ -266,12 +266,12 @@ export default function AddChildModal({ isOpen, onClose, onSubmit, groups, mode 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="block text-sm font-medium text-text-primary">Qon guruhi</label>
-                      <Select value={watch('medical.bloodType')} onValueChange={(val) => setValue('medical.bloodType', val)}>
+                      <Select value={watch('medical.bloodType') || 'unknown'} onValueChange={(val) => setValue('medical.bloodType', val === 'unknown' ? '' : val)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Noma'lum" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Noma'lum</SelectItem>
+                          <SelectItem value="unknown">Noma'lum</SelectItem>
                           {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(bt => <SelectItem key={bt} value={bt}>{bt}</SelectItem>)}
                         </SelectContent>
                       </Select>

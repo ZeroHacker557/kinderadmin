@@ -188,3 +188,61 @@ body {
     transform: scale(0.95) translateY(-8px);
   }
 }
+
+/* ============================================
+   Print Styles — Contract A4 Output
+   ============================================ */
+
+@media print {
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the contract template */
+  .print-contract,
+  .print-contract * {
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .print-contract {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  /* A4 page settings */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Reset backgrounds for clean print */
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide sidebar, header, mobile nav, scrollbars */
+  aside,
+  header,
+  nav,
+  .no-print,
+  button,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* Ensure grid/flex children in the contract render properly */
+  .print-contract .grid {
+    display: grid !important;
+  }
+
+  .print-contract .flex {
+    display: flex !important;
+  }
+}

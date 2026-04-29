@@ -53,7 +53,7 @@ export default function DashboardPage() {
     return () => unsubs.forEach((fn) => fn());
   }, [kindergartenId]);
 
-  const currentDate = new Date().toLocaleDateString(t('dashboard.locale', 'uz-UZ'), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const currentDate = formatDateDisplay(new Date().toISOString());
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   const stats = useMemo(() => {
@@ -161,7 +161,8 @@ export default function DashboardPage() {
 
     return months.map(m => {
       const dateObj = new Date(m + '-01');
-      const monthName = dateObj.toLocaleDateString('uz-UZ', { month: 'short' });
+      const monthNames = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+      const monthName = monthNames[dateObj.getMonth()];
       return {
         name: monthName,
         Daromad: map.get(m)!.income,

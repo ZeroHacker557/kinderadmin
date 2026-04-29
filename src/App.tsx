@@ -11,6 +11,7 @@ import FinancesPage from '@/pages/FinancesPage';
 import SettingsPage from '@/pages/SettingsPage';
 import AttendancePage from '@/pages/AttendancePage';
 import HelpPage from '@/pages/HelpPage';
+import ContractsPage from '@/pages/ContractsPage';
 import ParentsPage from '@/pages/ParentsPage';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
@@ -62,6 +63,14 @@ function AppRoutes() {
           } 
         />
         <Route path="/parents" element={<ParentsPage />} />
+        <Route 
+          path="/contracts" 
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ContractsPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/finances" 
           element={

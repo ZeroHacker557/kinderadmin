@@ -16,6 +16,7 @@ export default function MobileNav() {
   const moreItems = [
     { id: 'employees', label: 'Xodimlar', path: '/employees', show: hasPermission('admin') },
     { id: 'parents', label: 'Ota-onalar', path: '/parents' },
+    { id: 'contracts', label: 'Shartnomalar', path: '/contracts', show: hasPermission('admin') },
     { id: 'finances', label: 'Moliya', path: '/finances', show: hasPermission('admin') || hasPermission('accountant') },
     { id: 'attendance', label: 'Davomat', path: '/attendance', show: hasPermission('admin') || hasPermission('teacher') },
     { id: 'settings', label: 'Sozlamalar', path: '/settings' },

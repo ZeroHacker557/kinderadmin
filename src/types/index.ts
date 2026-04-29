@@ -116,6 +116,7 @@ export interface Parent {
   email: string;
   occupation?: string;
   address?: string;
+  passportSeries?: string;
 }
 
 export interface MedicalInfo {

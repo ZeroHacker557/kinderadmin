@@ -14,6 +14,7 @@ import {
   HelpCircle,
   CalendarCheck2,
   UserRound,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     { id: 'groups', label: t('nav.groups', 'Guruhlar'), icon: <FolderKanban className="w-5 h-5" />, path: '/groups', badge: groupsData?.length },
     { id: 'employees', label: t('nav.employees', 'Xodimlar'), icon: <UserCheck className="w-5 h-5" />, path: '/employees', badge: employeesData?.length, show: hasPermission('admin') },
     { id: 'parents', label: t('nav.parents', 'Ota-onalar'), icon: <UserRound className="w-5 h-5" />, path: '/parents' },
+    { id: 'contracts', label: t('nav.contracts', 'Shartnomalar'), icon: <FileText className="w-5 h-5" />, path: '/contracts', show: hasPermission('admin') },
     { id: 'finances', label: t('nav.finances', 'Moliya'), icon: <Wallet className="w-5 h-5" />, path: '/finances', show: hasPermission('admin') || hasPermission('accountant') },
     { id: 'attendance', label: t('nav.attendance', 'Davomat'), icon: <CalendarCheck2 className="w-5 h-5" />, path: '/attendance', show: hasPermission('admin') || hasPermission('teacher') },
   ];
